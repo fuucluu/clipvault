@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>ClipVault</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="ClipVault - A premium dark-themed video archive tool for collecting and organizing short-form videos from YouTube, Twitch, and more." />
+  <meta name="author" content="ClipVault" />
+  <meta name="theme-color" content="#030508" />
+
+  <meta property="og:title" content="ClipVault" />
+  <meta property="og:description" content="Search, collect, and organize video clips in a premium dark dashboard." />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='16' fill='%2300aaff'/><text x='32' y='44' font-family='sans-serif' font-weight='800' font-size='28' text-anchor='middle' fill='white'>CV</text></svg>" />
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --bg-deep: #030508;
+      --bg-base: #080c14;
+      --bg-surface: #0d1220;
+      --bg-elevated: #131a2b;
+      --border: #1a2438;
+      --border-hover: #2a3a52;
+      --text-primary: #e8ecf4;
+      --text-secondary: #8994a8;
+      --text-muted: #5a6478;
+      --accent: #00aaff;
+      --accent-glow: rgba(0, 170, 255, 0.15);
+      --accent-hover: #33bbff;
+      --danger: #ff4757;
+      --danger-glow: rgba(255, 71, 87, 0.12);
+      --success: #00d68f;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* ═══════════════════════════════════════════
+       STARTUP SCREEN
+    ═══════════════════════════════════════════ */
+    #startup {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: radial-gradient(ellipse at center, var(--bg-surface) 0%, var(--bg-deep) 70%);
+    }
+
+    .logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0066aa 100%);
+      box-shadow: 0 8px 32px rgba(0, 170, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 24px;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin: 0 0 6px 0;
+    }
+
+    .tag {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 32px;
+    }
+
+    .start-btn {
+      width: 100%;
+      max-width: 300px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, #0077cc 100%);
+      box-shadow: 0 4px 20px rgba(0, 170, 255, 0.25);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(0, 170, 255, 0.35);
+    }
+
+    .start-btn:active {
+      transform: translateY(0);
+    }
+
+    /* ═══════════════════════════════════════════
+       APP LAYOUT
+    ═══════════════════════════════════════════ */
+    #app {
+      flex-direction: column;
+      background: var(--bg-base);
+    }
+
+    .header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-surface);
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .actions span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .iconbtn {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .iconbtn:hover {
+      background: var(--bg-surface);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .main {
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* ═══════════════════════════════════════════
+       SEARCH BAR
+    ═══════════════════════════════════════════ */
+    .search {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .search input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .search button {
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .search button:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 16px rgba(0, 170, 255, 0.25);
+    }
+
+    /* ═══════════════════════════════════════════
+       FOLDER STRUCTURE (DATE + TERM)
+    ═══════════════════════════════════════════ */
+    .date {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      overflow: hidden;
+      background: var(--bg-surface);
+    }
+
+    .date-h {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      transition: background 0.15s ease;
+    }
+
+    .date-h:hover {
+      background: var(--bg-elevated);
+    }
+
+    .term {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-base);
+    }
+
+    .term-h {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      margin-bottom: 10px;
+      padding: 6px 0;
+      transition: color 0.15s ease;
+    }
+
+    .term-h:hover {
+      color: var(--text-primary);
+    }
+
+    .term-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* ═══════════════════════════════════════════
+       BUTTONS (PRIMARY, DANGER, GHOST)
+    ═══════════════════════════════════════════ */
+    .btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #ff5c6a;
+      box-shadow: 0 4px 12px var(--danger-glow);
+    }
+
+    .btn-ghost {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg-surface);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    /* ═══════════════════════════════════════════
+       VIDEO CARDS (COLLECTIBLE FEEL)
+    ═══════════════════════════════════════════ */
+    .video {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      background: var(--bg-elevated);
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .video:hover {
+      border-color: var(--border-hover);
+      background: linear-gradient(135deg, var(--bg-elevated) 0%, rgba(0, 170, 255, 0.03) 100%);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .video.locked {
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-glow), 0 4px 16px var(--accent-glow);
+    }
+
+    .thumb {
+      width: 100px;
+      height: 56px;
+      border-radius: 8px;
+      background: var(--bg-base);
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s ease;
+    }
+
+    .video:hover .thumb img {
+      transform: scale(1.05);
+    }
+
+    .v-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .v-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .v-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .v-btns {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .v-btns button {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .lockbtn {
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+    }
+
+    .lockbtn:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .lockbtn.on {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .lockbtn.on:hover {
+      background: var(--accent-hover);
+    }
+
+    .del {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid transparent;
+    }
+
+    .del:hover {
+      background: var(--danger-glow);
+      border-color: var(--danger);
+    }
+
+    .btn-icon-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 4px 10px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon-danger:hover {
+      background: var(--danger-glow);
+      border-color: var(--danger);
+    }
+
+    /* ═══════════════════════════════════════════
+       MODALS
+    ═══════════════════════════════════════════ */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 92%;
+      max-width: 520px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+    }
+
+    /* POPUP */
+    .body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .foot {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 12px;
+      background: var(--bg-elevated);
+    }
+
+    .foot button {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 16px rgba(0, 170, 255, 0.25);
+    }
+
+    .secondary {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .secondary:hover {
+      background: var(--bg-elevated);
+      border-color: var(--border-hover);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    label input,
+    label select {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px 12px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.15s ease;
+    }
+
+    label input:focus,
+    label select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    fieldset {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      padding: 12px 14px;
+      background: var(--bg-elevated);
+    }
+
+    legend {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0 6px;
+    }
+
+    .chk {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .chk input {
+      accent-color: var(--accent);
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ═══════════════════════════════════════════
+       SETTINGS DRAWER
+    ═══════════════════════════════════════════ */
+    #settingsDrawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 340px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border);
+      transform: translateX(100%);
+      transition: transform 0.25s ease;
+      z-index: 300;
+      box-shadow: -8px 0 40px rgba(0, 0, 0, 0.4);
+    }
+
+    #settingsDrawer.active {
+      transform: translateX(0);
+    }
+
+    .settings-h {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-elevated);
+    }
+
+    .settings-h strong {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .settings-b {
+      padding: 20px;
+    }
+
+    .toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .toggle input {
+      accent-color: var(--accent);
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ═══════════════════════════════════════════
+       PLAY MODAL
+    ═══════════════════════════════════════════ */
+    .play-body {
+      padding: 20px;
+    }
+
+    .play-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .play-head strong {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .close-btn,
+    .fs-btn {
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .close-btn:hover,
+    .fs-btn:hover {
+      background: var(--bg-surface);
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+
+    .head-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    #playerWrap {
+      display: none;
+      margin-bottom: 16px;
+    }
+
+    #playerFrame {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border: none;
+      border-radius: 12px;
+      background: var(--bg-base);
+    }
+
+    .play-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg-base);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .play-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #playTitle {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    #playMeta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ═══════════════════════════════════════════
+       ANIMATIONS & KEYFRAMES
+    ═══════════════════════════════════════════ */
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes modalFadeOut {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        max-height: 0;
+        transform: translateY(-8px);
+      }
+
+      to {
+        opacity: 1;
+        max-height: 2000px;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulseGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 1px var(--accent-glow), 0 4px 16px var(--accent-glow);
+      }
+
+      50% {
+        box-shadow: 0 0 0 2px var(--accent-glow), 0 6px 24px rgba(0, 170, 255, 0.25);
+      }
+    }
+
+    /* Modal animation */
+    .modal:not(.hidden) .box {
+      animation: modalFadeIn 0.2s ease-out forwards;
+    }
+
+    .modal {
+      transition: opacity 0.15s ease;
+    }
+
+    /* Folder content animation */
+    .date>div:last-child,
+    .term>div:last-child {
+      animation: slideDown 0.25s ease-out forwards;
+      overflow: hidden;
+    }
+
+    /* Lock state pulse */
+    .video.locked {
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+
+    /* Startup screen animation */
+    #startup .logo {
+      animation: fadeIn 0.5s ease-out 0.1s both;
+    }
+
+    #startup h1 {
+      animation: fadeIn 0.5s ease-out 0.2s both;
+    }
+
+    #startup .tag {
+      animation: fadeIn 0.5s ease-out 0.3s both;
+    }
+
+    #startup .start-btn {
+      animation: fadeIn 0.5s ease-out 0.4s both;
+    }
+
+    /* ═══════════════════════════════════════════
+       BACKGROUND DEPTH & TEXTURE
+    ═══════════════════════════════════════════ */
+
+    /* Subtle vignette on app */
+    #app::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.4) 100%);
+      z-index: -1;
+    }
+
+    /* Accent glow line under header */
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.4;
+    }
+
+    .header {
+      position: relative;
+    }
+
+    /* ═══════════════════════════════════════════
+       ENHANCED MICRO-INTERACTIONS
+    ═══════════════════════════════════════════ */
+
+    /* Button press effect */
+    .start-btn:active,
+    .primary:active,
+    .secondary:active,
+    .btn:active,
+    .iconbtn:active {
+      transform: scale(0.97);
+    }
+
+    /* Video card focus ring for keyboard nav */
+    .video:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* Smooth scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-base);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+
+    /* Link-style hover on title */
+    .v-title {
+      transition: color 0.15s ease;
+    }
+
+    .video:hover .v-title {
+      color: var(--accent);
+    }
+
+    /* Settings drawer backdrop */
+    #settingsDrawer::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: -1;
+    }
+
+    #settingsDrawer.active::before {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Checkbox custom styling */
+    input[type="checkbox"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    input[type="checkbox"]:checked::after {
+      content: '✓';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    input[type="checkbox"]:hover {
+      border-color: var(--border-hover);
+    }
+
+    /* Select dropdown styling */
+    select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238994a8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 36px !important;
+    }
+
+    /* Number input spinner hide */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- STARTUP -->
+  <div id="startup" class="screen active">
+    <div class="logo">CV</div>
+    <h1>ClipVault</h1>
+    <div class="tag">Search smarter.</div>
+    <button id="guestBtn" class="start-btn">Continue as Guest</button>
+  </div>
+
+  <!-- APP -->
+  <div id="app" class="screen">
+    <div class="header">
+      <div class="brand">ClipVault</div>
+      <div class="actions">
+        <button id="settingsBtn" class="iconbtn">⚙</button>
+        <span style="opacity:.6">Guest</span>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="search">
+        <input id="searchInput" placeholder="Search..." />
+        <button id="searchBtn">Search</button>
+      </div>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <!-- SEARCH POPUP -->
+  <div id="popup" class="modal hidden">
+    <div class="box">
+      <div class="body">
+        <label>Max videos
+          <input id="maxVideos" type="number" min="1" max="50" value="5" />
+        </label>
+
+        <label>Back date
+          <select id="backDate">
+            <option>24 hours</option>
+            <option>2 days</option>
+            <option>5 days</option>
+            <option>2 weeks</option>
+            <option>4 weeks</option>
+          </select>
+        </label>
+
+        <label>Account Type
+          <select id="searchAccountType">
+            <option value="any">Any Account</option>
+            <option value="official">Official Only</option>
+            <option value="sub">Subscriber Only</option>
+          </select>
+        </label>
+
+        <label>Search By
+          <select id="searchBy">
+            <option value="all">Everything</option>
+            <option value="title">Title</option>
+            <option value="keyword">Keyword</option>
+            <option value="channel">Channel</option>
+          </select>
+        </label>
+
+        <fieldset>
+          <legend>Platforms</legend>
+          <div class="chk"><span>YouTube</span><input type="checkbox" class="plat-chk" value="YouTube" checked></div>
+          <div class="chk"><span>Twitch</span><input type="checkbox" class="plat-chk" value="Twitch" checked></div>
+          <div class="chk"><span>TikTok</span><input type="checkbox" class="plat-chk" value="TikTok" checked></div>
+        </fieldset>
+      </div>
+      <div class="foot">
+        <button id="cancelBtn" class="secondary">Cancel</button>
+        <button id="runBtn" class="primary">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settingsDrawer">
+    <div class="settings-h">
+      <strong>Settings</strong>
+      <button id="closeSettings" class="btn-ghost">✕</button>
+    </div>
+    <div class="settings-b">
+      <label>Default max videos
+        <input id="setMax" type="number" min="1" max="50">
+      </label>
+
+      <label>Default Account Type
+        <select id="setAccountType">
+          <option value="any">Any Account</option>
+          <option value="official">Official Only</option>
+          <option value="sub">Subscriber Only</option>
+        </select>
+      </label>
+
+      <div class="toggle">
+        <span>Protect locked items</span>
+        <input id="setProtect" type="checkbox" checked>
+      </div>
+      <div style="font-size:0.75rem;opacity:0.6;margin-bottom:16px;line-height:1.4">
+        When enabled, locked videos cannot be deleted by bulk actions. You must unlock them first.
+      </div>
+
+      <hr style="border:0;border-top:1px solid #1a2030;margin:16px 0">
+
+      <div style="opacity:0.5;margin-bottom:16px">
+        <strong>Account (Coming Soon)</strong>
+        <div style="margin-top:8px;font-size:0.8rem">Login to sync your clips across devices.</div>
+        <button disabled class="btn-ghost" style="width:100%;margin-top:8px;opacity:0.5">Login / Sign Up</button>
+      </div>
+
+      <hr style="border:0;border-top:1px solid #1a2030;margin:16px 0">
+
+      <button id="clearDataBtn" class="btn-danger" style="width:100%">Clear All Data</button>
+    </div>
+  </div>
+
+  <!-- PLAY MODAL -->
+  <div id="playModal" class="modal hidden">
+    <div class="box">
+      <div class="play-body">
+        <div class="play-head">
+          <strong>Preview</strong>
+          <div class="head-actions">
+            <button id="fullscreenBtn" class="fs-btn" title="Toggle Fullscreen">⛶</button>
+            <button id="closePlayBtn" class="close-btn" title="Close">✕</button>
+          </div>
+        </div>
+
+        <div id="playerWrap">
+          <iframe id="playerFrame" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+
+        <div class="play-thumb">
+          <img id="playThumb">
+        </div>
+
+        <div id="playTitle" style="font-weight:700;margin-bottom:4px"></div>
+        <div id="playMeta" style="font-size:.8rem;opacity:.7"></div>
+
+        <button id="openVideoBtn" class="primary" style="margin-top:12px;width:100%">
+          Open Video
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * ═══════════════════════════════════════════════════════════════════════
+     * CLIPVAULT - REQUIRED DOM ELEMENT IDS
+     * ═══════════════════════════════════════════════════════════════════════
+     * STARTUP: #startup, #guestBtn
+     * APP: #app, #settingsBtn, #searchInput, #searchBtn, #results
+     * POPUP: #popup, #maxVideos, #backDate, #searchAccountType, #searchBy,
+     *        .plat-chk (checkboxes), #cancelBtn, #runBtn
+     * SETTINGS: #settingsDrawer, #closeSettings, #setMax, #setProtect,
+     *           #setAccountType, #clearDataBtn
+     * PLAY MODAL: #playModal, #playerWrap, #playerFrame, #playThumb,
+     *             #playTitle, #playMeta, #openVideoBtn, #closePlayBtn,
+     *             #fullscreenBtn
+     * ═══════════════════════════════════════════════════════════════════════
+     */
+
+    // DEBUG MODE - Set to true for console logging
+    const DEBUG = false;
+    function log(...args) { if (DEBUG) console.log('[ClipVault]', ...args); }
+    function warn(...args) { if (DEBUG) console.warn('[ClipVault]', ...args); }
+
+    // Platform thumbnails (SVG placeholders)
+    const thumbs = {
+      YouTube: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 90'><rect width='160' height='90' fill='%23cc0000'/><polygon points='65,25 65,65 105,45' fill='white'/></svg>",
+      Twitch: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 90'><rect width='160' height='90' fill='%239144ff'/><rect x='52' y='28' width='56' height='34' rx='6' fill='white'/></svg>",
+      TikTok: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 90'><rect width='160' height='90' fill='%23000000'/><circle cx='80' cy='45' r='18' fill='%23ff0050'/></svg>"
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // CENTRALIZED SHARED STATE
+    // ═══════════════════════════════════════════════════════════════════════
+    const STATE_KEY = "clipvault_state_v1";
+    let currentVideo = null; // Track currently playing video
+
+    // Default state structure (source of truth for shape)
+    const DEFAULT_STATE = {
+      settings: {
+        maxVideos: 5,
+        protectLocked: true,
+        accountType: "any"
+      },
+      clips: {}
+    };
+
+    // Active state (merged with localStorage on load)
+    let state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // STATE PERSISTENCE
+    // ═══════════════════════════════════════════════════════════════════════
+    function loadState() {
+      try {
+        const s = localStorage.getItem(STATE_KEY);
+        if (s) {
+          const parsed = JSON.parse(s);
+          // Deep merge to ensure new fields exist
+          state = {
+            ...DEFAULT_STATE,
+            ...parsed,
+            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) }
+          };
+          log('State loaded:', state);
+        }
+      } catch (e) {
+        warn('Load failed, using defaults:', e);
+        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      }
+      render();
+      updateSettingsUI();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        log('State saved');
+      } catch (e) { warn('Save failed:', e); }
+    }
+
+    const today = () => new Date().toLocaleDateString();
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SAFE DOM ACCESSOR
+    // ═══════════════════════════════════════════════════════════════════════
+    function $(id) {
+      const el = document.getElementById(id);
+      if (!el) warn(`Element #${id} not found`);
+      return el;
+    }
+
+    /* startup */
+    const startupEl = document.getElementById("startup");
+    const appEl = document.getElementById("app");
+    const guestBtnEl = document.getElementById("guestBtn");
+
+    if (guestBtnEl) {
+      guestBtnEl.onclick = () => {
+        if (startupEl) startupEl.classList.remove("active");
+        if (appEl) appEl.classList.add("active");
+      };
+    }
+
+    /* settings UI */
+    const setMaxEl = document.getElementById("setMax");
+    const setProtectEl = document.getElementById("setProtect");
+    const setAccountTypeEl = document.getElementById("setAccountType");
+    const settingsDrawerEl = document.getElementById("settingsDrawer");
+    const settingsBtnEl = document.getElementById("settingsBtn");
+    const closeSettingsEl = document.getElementById("closeSettings");
+    const clearDataBtnEl = document.getElementById("clearDataBtn");
+
+    function updateSettingsUI() {
+      if (setMaxEl) setMaxEl.value = state.settings.maxVideos;
+      if (setProtectEl) setProtectEl.checked = state.settings.protectLocked;
+      if (setAccountTypeEl) setAccountTypeEl.value = state.settings.accountType || "any";
+    }
+
+    if (settingsBtnEl && settingsDrawerEl) settingsBtnEl.onclick = () => settingsDrawerEl.classList.add("active");
+    if (closeSettingsEl && settingsDrawerEl) closeSettingsEl.onclick = () => settingsDrawerEl.classList.remove("active");
+
+    if (setMaxEl) setMaxEl.onchange = () => { state.settings.maxVideos = +setMaxEl.value; saveState(); };
+    if (setProtectEl) setProtectEl.onchange = () => { state.settings.protectLocked = setProtectEl.checked; saveState(); };
+    if (setAccountTypeEl) setAccountTypeEl.onchange = () => { state.settings.accountType = setAccountTypeEl.value; saveState(); };
+
+    if (clearDataBtnEl) clearDataBtnEl.onclick = () => {
+      if (confirm("Are you sure? This will delete all clips and settings.")) {
+        localStorage.removeItem(STATE_KEY);
+        location.reload();
+      }
+    };
+
+    /* search */
+    const popupEl = document.getElementById("popup");
+    const searchBtnEl = document.getElementById("searchBtn");
+    const searchInputEl = document.getElementById("searchInput");
+    const cancelBtnEl = document.getElementById("cancelBtn");
+    const runBtnEl = document.getElementById("runBtn");
+    const backDateEl = document.getElementById("backDate");
+    const searchByEl = document.getElementById("searchBy");
+    const searchAccountTypeEl = document.getElementById("searchAccountType");
+    const maxVideosEl = document.getElementById("maxVideos");
+
+    function openPopup() {
+      if (popupEl) popupEl.classList.remove("hidden");
+      // Sync popup values from settings
+      if (maxVideosEl) maxVideosEl.value = state.settings.maxVideos;
+      if (searchAccountTypeEl) searchAccountTypeEl.value = state.settings.accountType || "any";
+    }
+
+    if (searchBtnEl) searchBtnEl.onclick = openPopup;
+    if (searchInputEl) searchInputEl.addEventListener("keydown", e => { if (e.key === "Enter") openPopup() });
+    if (cancelBtnEl) cancelBtnEl.onclick = () => popupEl.classList.add("hidden");
+
+    if (runBtnEl) runBtnEl.onclick = () => {
+      if (popupEl) popupEl.classList.add("hidden");
+      const term = searchInputEl ? searchInputEl.value.trim() : "";
+      if (!term) return;
+
+      const plats = Array.from(document.querySelectorAll(".plat-chk:checked")).map(c => c.value);
+      const cfg = {
+        platforms: plats.length ? plats : ["YouTube"],
+        backDate: backDateEl ? backDateEl.value : "24 hours",
+        accountType: searchAccountTypeEl ? searchAccountTypeEl.value : "any",
+        searchType: searchByEl ? searchByEl.value : "all"
+      };
+
+      state.clips[today()] = state.clips[today()] || {};
+      state.clips[today()][term] = gen(term, +(maxVideosEl ? maxVideosEl.value : 5), cfg);
+      saveState();
+      render();
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // REAL DATA SOURCE (READ-ONLY CURATED LIST)
+    // ═══════════════════════════════════════════════════════════════════════
+    const REAL_CLIPS = [
+      { id: "jfKfPfyJRdk", title: "lofi hip hop radio - beats to relax/study to", channel: "Lofi Girl", platform: "YouTube" },
+      { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up", channel: "Rick Astley", platform: "YouTube" },
+      { id: "jNQXAC9IVRw", title: "Me at the zoo", channel: "jawed", platform: "YouTube" },
+      { id: "M7fi_ChqrQA", title: "History of the World, I Guess", channel: "bill wurtz", platform: "YouTube" },
+      { id: "L_LUpnjgPso", title: "Cyberpunk 2077 - Official Trailer", channel: "Cyberpunk 2077", platform: "YouTube" },
+      { id: "5qap5aO4i9A", title: "lofi hip hop radio - beats to sleep/chill to", channel: "Lofi Girl", platform: "YouTube" },
+      { id: "hY7m5jjJ9mM", title: "ELEMENT.", channel: "Kendrick Lamar", platform: "YouTube" }, // VEVO
+      { id: "9bZkp7q19f0", title: "PSY - GANGNAM STYLE(강남스타일) M/V", channel: "officialpsy", platform: "YouTube" },
+      { id: "kJQP7kiw5Fk", title: "Luis Fonsi - Despacito ft. Daddy Yankee", channel: "Luis Fonsi", platform: "YouTube" },
+      { id: "OPf0YbXqDm0", title: "Mark Ronson - Uptown Funk ft. Bruno Mars", channel: "Mark Ronson", platform: "YouTube" },
+      { id: "09R8_2nJtjg", title: "Maroon 5 - Sugar", channel: "Maroon 5", platform: "YouTube" },
+      { id: "RgKAFK5djSk", title: "Wiz Khalifa - See You Again ft. Charlie Puth", channel: "Wiz Khalifa", platform: "YouTube" },
+      { id: "fRh_vgS2dFE", title: "Justin Bieber - Sorry (PURPOSE : The Movement)", channel: "Justin Bieber", platform: "YouTube" },
+      { id: "papuvlVeZg8", title: "Katy Perry - Roar", channel: "Katy Perry", platform: "YouTube" },
+      { id: "JGwWNGJdvx8", title: "Ed Sheeran - Shape of You", channel: "Ed Sheeran", platform: "YouTube" }
+    ];
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // API ABSTRACTION LAYER
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Fetch videos for a search query.
+     * Currently uses curated REAL_CLIPS with term filtering.
+     * Future: Replace with actual YouTube API call via backend.
+     * 
+     * @param {string} query - Search term
+     * @param {number} limit - Max results
+     * @param {object} cfg - Search configuration
+     * @returns {object} { videos: VideoItem[], source: string }
+     */
+    function fetchVideos(query, limit, cfg) {
+      log('fetchVideos called:', { query, limit, cfg });
+
+      const queryLower = query.toLowerCase().trim();
+
+      // Step 1: Filter REAL_CLIPS by search term (fuzzy match on title/channel)
+      const matches = REAL_CLIPS.filter(clip => {
+        const titleMatch = clip.title.toLowerCase().includes(queryLower);
+        const channelMatch = clip.channel.toLowerCase().includes(queryLower);
+        return titleMatch || channelMatch;
+      });
+
+      log('Term filter results:', { query, matchCount: matches.length });
+
+      // Step 2: Determine source and pool
+      let pool = matches;
+      let source = 'curated';
+
+      if (matches.length === 0) {
+        // No matches - fallback to full list
+        pool = REAL_CLIPS;
+        source = 'fallback';
+        warn('No matches for query, using fallback:', query);
+      }
+
+      // Step 3: Sample from pool (random selection up to limit)
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, Math.min(limit, shuffled.length));
+
+      log('Final selection:', { source, count: selected.length });
+
+      return { videos: selected, source };
+    }
+
+    /**
+     * Generate video items from fetched data.
+     * Converts raw clip data to full VideoItem objects.
+     */
+    function gen(term, n, cfg) {
+      log('gen() called:', { term, n, cfg });
+
+      const { videos, source } = fetchVideos(term, n, cfg);
+      const backMap = { "24 hours": 864e5, "2 days": 1728e5, "5 days": 432e6, "2 weeks": 12096e5, "4 weeks": 24192e5 };
+      const maxTime = backMap[cfg.backDate] || 864e5;
+      const now = Date.now();
+
+      const results = videos.map((real, i) => {
+        const timeOffset = Math.random() * maxTime;
+        const uId = real.id;
+
+        return {
+          id: uId,
+          platform: real.platform,
+          title: real.title,
+          channel: real.channel,
+          uploadDate: new Date(now - timeOffset),
+          thumbnail: `https://img.youtube.com/vi/${uId}/mqdefault.jpg`,
+          locked: false,
+          url: `https://www.youtube.com/watch?v=${uId}`,
+          accountType: "Official",
+          searchType: cfg.searchType,
+          searchSource: source // Track data origin
+        };
+      });
+
+      log('gen() results:', { term, count: results.length, source });
+      return results.sort((x, y) => x.uploadDate - y.uploadDate);
+    }
+
+    /* play */
+    const playerFrameEl = document.getElementById("playerFrame");
+    const playerWrapEl = document.getElementById("playerWrap");
+    const playThumbEl = document.getElementById("playThumb");
+    const playTitleEl = document.getElementById("playTitle");
+    const playMetaEl = document.getElementById("playMeta");
+    const playModalEl = document.getElementById("playModal");
+    const openVideoBtnEl = document.getElementById("openVideoBtn");
+    const closePlayBtnEl = document.getElementById("closePlayBtn");
+    const fullscreenBtnEl = document.getElementById("fullscreenBtn");
+
+    function getEmbedUrl(v) {
+      if (v.platform === "YouTube") {
+        const id = v.url.split("v=").pop();
+        return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+      if (v.platform === "Twitch") {
+        let parent = location.hostname;
+        if (!parent || parent === "") parent = "localhost";
+        return `https://player.twitch.tv/?channel=${v.channel.toLowerCase()}&parent=${parent}&autoplay=true`;
+      }
+      // TikTok and others -> return null to trigger fallback
+      return null;
+    }
+
+    function openPlay(v) {
+      currentVideo = v;
+      const embed = getEmbedUrl(v);
+
+      // Reset state
+      if (playerFrameEl) playerFrameEl.src = "";
+
+      if (embed && playerFrameEl) {
+        playerFrameEl.src = embed;
+        if (playerWrapEl) playerWrapEl.style.display = "block";
+        if (playThumbEl) playThumbEl.style.display = "none";
+      } else {
+        // Fallback mode
+        if (playerWrapEl) playerWrapEl.style.display = "none";
+        if (playThumbEl) {
+          playThumbEl.style.display = "block";
+          playThumbEl.src = v.thumbnail;
+        }
+      }
+      if (playTitleEl) playTitleEl.textContent = v.title;
+      if (playMetaEl) playMetaEl.textContent = `${v.platform} • ${v.channel} • ${v.uploadDate.toDateString()}`;
+      if (playModalEl) playModalEl.classList.remove("hidden");
+    }
+
+    function closePlay() {
+      if (playModalEl) playModalEl.classList.add("hidden");
+      if (playerFrameEl) playerFrameEl.src = "";
+    }
+
+    if (closePlayBtnEl) closePlayBtnEl.onclick = closePlay;
+    if (playModalEl) playModalEl.onclick = e => { if (e.target === playModalEl) closePlay() };
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closePlay() });
+
+    if (openVideoBtnEl) openVideoBtnEl.onclick = () => {
+      if (!currentVideo || !currentVideo.url) {
+        warn('Open Video: No URL found for', currentVideo);
+        return;
+      }
+      log('Opening URL:', currentVideo.url);
+      window.open(currentVideo.url, "_blank", "noopener");
+    };
+
+    if (fullscreenBtnEl) fullscreenBtnEl.onclick = toggleFullscreen;
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        if (playerWrapEl && playerWrapEl.style.display !== "none" && playerFrameEl) {
+          playerFrameEl.requestFullscreen().catch(err => console.log(err));
+        } else if (playThumbEl) {
+          playThumbEl.requestFullscreen().catch(err => console.log(err));
+        }
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      if ((e.key === "f" || e.key === "F") && playModalEl && !playModalEl.classList.contains("hidden")) {
+        toggleFullscreen();
+      }
+    });
+
+    /* render */
+    const resultsEl = document.getElementById("results");
+
+    function render() {
+      if (!resultsEl) return;
+      resultsEl.innerHTML = "";
+      for (const d in state.clips) {
+        const D = document.createElement("div");
+        D.className = "date";
+        const dh = document.createElement("div");
+        dh.className = "date-h";
+
+        const dhSpan = document.createElement("span");
+        dhSpan.textContent = d;
+        dh.appendChild(dhSpan);
+
+        const dhDel = document.createElement("button");
+        dhDel.className = "btn-icon-danger";
+        dhDel.style.padding = "6px 10px";
+        dhDel.style.fontSize = "0.75rem";
+        dhDel.textContent = "Delete Date";
+        dhDel.onclick = (e) => { e.stopPropagation(); deleteDate(d); };
+        dh.appendChild(dhDel);
+
+        const db = document.createElement("div");
+        dh.onclick = (e) => { if (e.target !== dhDel) db.style.display = db.style.display === "none" ? "block" : "none"; };
+
+        for (const t in state.clips[d]) {
+          const T = document.createElement("div");
+          T.className = "term";
+          const th = document.createElement("div");
+          th.className = "term-h";
+
+          const thSpan = document.createElement("span");
+          thSpan.textContent = t;
+          th.appendChild(thSpan);
+
+          const thDel = document.createElement("button");
+          thDel.className = "btn-icon-danger";
+          thDel.style.padding = "4px 8px";
+          thDel.style.fontSize = "0.7rem";
+          thDel.textContent = "Delete All";
+          thDel.onclick = (e) => { e.stopPropagation(); deleteTerm(d, t); };
+          th.appendChild(thDel);
+
+          const tb = document.createElement("div");
+          th.onclick = (e) => { if (e.target !== thDel) tb.style.display = tb.style.display === "none" ? "block" : "none"; };
+
+          state.clips[d][t].forEach(v => {
+            const V = document.createElement("div");
+            V.className = "video" + (v.locked ? " locked" : "");
+            V.innerHTML = `
+          <div class="thumb" style="cursor:pointer"><img src="${v.thumbnail}"></div>
+          <div class="v-info" style="cursor:pointer">
+            <div class="v-title">${v.title}</div>
+            <div class="v-meta">${v.platform} • ${v.channel} • ${v.uploadDate.toDateString()}</div>
+             <div style="font-size:0.65rem;opacity:0.5;margin-top:2px">${v.accountType || "User"} • ${v.searchType || "All"}</div>
+          </div>
+          <div class="v-btns">
+            <button class="lockbtn ${v.locked ? "on" : ""}">${v.locked ? "Unlock" : "Lock"}</button>
+            <button class="del">Delete</button>
+          </div>`;
+
+            // Interaction handlers
+            V.querySelector(".thumb").onclick = () => openPlay(v);
+            V.querySelector(".v-info").onclick = () => openPlay(v);
+
+            V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render() };
+            V.querySelector(".del").onclick = () => {
+              if (state.settings.protectLocked && v.locked) return; // Protected
+              if (!v.locked || !state.settings.protectLocked) {
+                state.clips[d][t] = state.clips[d][t].filter(x => x !== v);
+                if (state.clips[d][t].length === 0) delete state.clips[d][t];
+                if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
+                saveState();
+                render();
+              }
+            };
+            tb.appendChild(V);
+          });
+
+          T.appendChild(th);
+          T.appendChild(tb);
+          db.appendChild(T);
+        }
+
+        D.appendChild(dh);
+        D.appendChild(db);
+        resultsEl.appendChild(D);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // BULK DELETE (SAFE FAILURE)
+    // ═══════════════════════════════════════════════════════════════════════
+    function deleteDate(d) {
+      if (!state.clips || !state.clips[d]) {
+        warn('deleteDate: date not found', d);
+        return; // Safe failure
+      }
+      if (confirm(`Delete all clips from ${d}?`)) {
+        log('Deleting date:', d);
+        for (const t in state.clips[d]) {
+          if (state.settings.protectLocked) {
+            state.clips[d][t] = state.clips[d][t].filter(v => v.locked);
+          } else {
+            state.clips[d][t] = [];
+          }
+          if (state.clips[d][t].length === 0) delete state.clips[d][t];
+        }
+        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
+        saveState();
+        render();
+      }
+    }
+
+    function deleteTerm(d, t) {
+      if (!state.clips || !state.clips[d] || !state.clips[d][t]) {
+        warn('deleteTerm: term not found', d, t);
+        return; // Safe failure
+      }
+      if (confirm(`Delete all clips for "${t}"?`)) {
+        log('Deleting term:', t, 'from', d);
+        if (state.settings.protectLocked) {
+          state.clips[d][t] = state.clips[d][t].filter(v => v.locked);
+        } else {
+          state.clips[d][t] = [];
+        }
+        if (state.clips[d][t].length === 0) delete state.clips[d][t];
+        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
+        saveState();
+        render();
+      }
+    }
+
+    // Init at the END
+    setTimeout(loadState, 0); // Enforce async/next-tick to be safe
+
+  </script>
+
+</body>
+
+</html>
