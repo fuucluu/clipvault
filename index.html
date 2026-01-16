@@ -1759,11 +1759,16 @@
           state.clips[d][t].forEach(v => {
             const V = document.createElement("div");
             V.className = "video" + (v.locked ? " locked" : "");
+
+            // Normalize uploadDate to Date object
+            const dateObj = v.uploadDate instanceof Date ? v.uploadDate : new Date(v.uploadDate);
+            const dateLabel = dateObj.toDateString();
+
             V.innerHTML = `
           <div class="thumb" style="cursor:pointer"><img src="${v.thumbnail}"></div>
           <div class="v-info" style="cursor:pointer">
             <div class="v-title">${v.title}</div>
-            <div class="v-meta">${v.platform} • ${v.channel} • ${v.uploadDate.toDateString()}</div>
+            <div class="v-meta">${v.platform} • ${v.channel} • ${dateLabel}</div>
              <div style="font-size:0.65rem;opacity:0.5;margin-top:2px">${v.accountType || "User"} • ${v.searchType || "All"}</div>
           </div>
           <div class="v-btns">
