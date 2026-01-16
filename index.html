@@ -1425,6 +1425,12 @@
     const searchAccountTypeEl = document.getElementById("searchAccountType");
     const maxVideosEl = document.getElementById("maxVideos");
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // COLLAPSE STATE (SESSION ONLY - IN-MEMORY)
+    // ═══════════════════════════════════════════════════════════════════════
+    const collapsedDates = new Set(); // Track collapsed date folders
+    const collapsedTerms = new Set(); // Track collapsed term folders (key: "date|term")
+
     function openPopup() {
       if (popupEl) popupEl.classList.remove("hidden");
       // Sync popup values from settings
@@ -1432,12 +1438,12 @@
       if (searchAccountTypeEl) searchAccountTypeEl.value = state.settings.accountType || "any";
     }
 
-    if (searchBtnEl) searchBtnEl.onclick = openPopup;
-    if (searchInputEl) searchInputEl.addEventListener("keydown", e => { if (e.key === "Enter") openPopup() });
-    if (cancelBtnEl) cancelBtnEl.onclick = () => popupEl.classList.add("hidden");
-
-    if (runBtnEl) runBtnEl.onclick = () => {
+    function closePopup() {
       if (popupEl) popupEl.classList.add("hidden");
+    }
+
+    function runSearch() {
+      closePopup();
       const term = searchInputEl ? searchInputEl.value.trim() : "";
       if (!term) return;
 
@@ -1453,7 +1459,25 @@
       state.clips[today()][term] = gen(term, +(maxVideosEl ? maxVideosEl.value : 5), cfg);
       saveState();
       render();
-    };
+    }
+
+    if (searchBtnEl) searchBtnEl.onclick = openPopup;
+    if (searchInputEl) searchInputEl.addEventListener("keydown", e => { if (e.key === "Enter") openPopup() });
+    if (cancelBtnEl) cancelBtnEl.onclick = closePopup;
+    if (runBtnEl) runBtnEl.onclick = runSearch;
+
+    // Popup keyboard: Enter = search, Escape = close
+    if (popupEl) {
+      popupEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          runSearch();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          closePopup();
+        }
+      });
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // REAL DATA SOURCE (READ-ONLY CURATED LIST)
@@ -1671,7 +1695,24 @@
         dh.appendChild(dhDel);
 
         const db = document.createElement("div");
-        dh.onclick = (e) => { if (e.target !== dhDel) db.style.display = db.style.display === "none" ? "block" : "none"; };
+
+        // Restore collapsed state for date folder
+        if (collapsedDates.has(d)) {
+          db.style.display = "none";
+        }
+
+        dh.onclick = (e) => {
+          if (e.target !== dhDel) {
+            const isCollapsed = db.style.display === "none";
+            db.style.display = isCollapsed ? "block" : "none";
+            // Track collapse state
+            if (isCollapsed) {
+              collapsedDates.delete(d);
+            } else {
+              collapsedDates.add(d);
+            }
+          }
+        };
 
         for (const t in state.clips[d]) {
           const T = document.createElement("div");
@@ -1692,7 +1733,25 @@
           th.appendChild(thDel);
 
           const tb = document.createElement("div");
-          th.onclick = (e) => { if (e.target !== thDel) tb.style.display = tb.style.display === "none" ? "block" : "none"; };
+          const termKey = `${d}|${t}`;
+
+          // Restore collapsed state for term folder
+          if (collapsedTerms.has(termKey)) {
+            tb.style.display = "none";
+          }
+
+          th.onclick = (e) => {
+            if (e.target !== thDel) {
+              const isCollapsed = tb.style.display === "none";
+              tb.style.display = isCollapsed ? "block" : "none";
+              // Track collapse state
+              if (isCollapsed) {
+                collapsedTerms.delete(termKey);
+              } else {
+                collapsedTerms.add(termKey);
+              }
+            }
+          };
 
           state.clips[d][t].forEach(v => {
             const V = document.createElement("div");
