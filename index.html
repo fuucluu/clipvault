@@ -1466,9 +1466,12 @@
     if (cancelBtnEl) cancelBtnEl.onclick = closePopup;
     if (runBtnEl) runBtnEl.onclick = runSearch;
 
-    // Popup keyboard: Enter = search, Escape = close
+    // Popup keyboard: Enter = search, Escape = close (only when visible)
     if (popupEl) {
       popupEl.addEventListener("keydown", e => {
+        // Only handle if popup is visible
+        if (popupEl.classList.contains("hidden")) return;
+
         if (e.key === "Enter") {
           e.preventDefault();
           runSearch();
