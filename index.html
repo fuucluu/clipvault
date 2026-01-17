@@ -57,7 +57,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background: #050506;
+      background: #030304;
       overflow-x: hidden;
       color: var(--text-primary);
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -65,39 +65,40 @@
       line-height: 1.5;
     }
 
-    /* Cinematic gradient layer */
+    /* Layer 2: Cinematic Lighting */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse 120% 80% at 50% -10%, rgba(139, 0, 0, 0.5) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 60% at 90% 90%, rgba(90, 11, 18, 0.35) 0%, transparent 45%),
-        radial-gradient(ellipse 70% 50% at 10% 85%, rgba(80, 15, 15, 0.25) 0%, transparent 40%),
-        linear-gradient(135deg, rgba(60, 5, 5, 0.3) 0%, transparent 50%);
+        /* Primary light - top left crimson glow */
+        radial-gradient(ellipse 150% 100% at 0% 0%, rgba(139, 0, 0, 0.6) 0%, transparent 45%),
+        /* Secondary light - bottom right blood red */
+        radial-gradient(ellipse 120% 80% at 100% 100%, rgba(100, 10, 10, 0.45) 0%, transparent 50%),
+        /* Center dark wash for depth */
+        radial-gradient(ellipse 100% 100% at 50% 50%, rgba(20, 0, 0, 0.3) 0%, transparent 70%),
+        /* Diagonal motion gradient */
+        linear-gradient(135deg, rgba(80, 5, 5, 0.4) 0%, transparent 40%, transparent 60%, rgba(60, 5, 5, 0.25) 100%),
+        /* Subtle top accent */
+        radial-gradient(ellipse 80% 30% at 30% 0%, rgba(180, 20, 20, 0.35) 0%, transparent 50%);
       opacity: 1;
       pointer-events: none;
       z-index: -2;
     }
 
-    /* Vignette + grain layer */
+    /* Layer 3: Atmosphere (vignette + grain) */
     body::after {
       content: '';
       position: fixed;
       inset: 0;
       background:
-        radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.8) 100%),
-        repeating-linear-gradient(0deg,
-          transparent 0px,
-          transparent 2px,
-          rgba(0, 0, 0, 0.03) 2px,
-          rgba(0, 0, 0, 0.03) 4px),
-        repeating-linear-gradient(90deg,
-          transparent 0px,
-          transparent 2px,
-          rgba(0, 0, 0, 0.02) 2px,
-          rgba(0, 0, 0, 0.02) 4px);
-      opacity: 0.85;
+        /* Heavy vignette - edges much darker */
+        radial-gradient(ellipse 70% 70% at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0.9) 100%),
+        /* Film grain simulation */
+        repeating-radial-gradient(circle at 50% 50%, transparent 0px, transparent 1px, rgba(0, 0, 0, 0.015) 1px, rgba(0, 0, 0, 0.015) 2px),
+        repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(5, 0, 0, 0.02) 3px, rgba(5, 0, 0, 0.02) 4px),
+        repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(5, 0, 0, 0.015) 3px, rgba(5, 0, 0, 0.015) 4px);
+      opacity: 1;
       pointer-events: none;
       z-index: -1;
     }
