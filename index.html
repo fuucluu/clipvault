@@ -26,13 +26,14 @@
       --bg-surface: #0a0f1a;
       --bg-elevated: #101828;
       --border: #1a2438;
-      --border-hover: #2d4260;
+      --border-hover: #3d2a2a;
       --text-primary: #f0f4fa;
       --text-secondary: #8a99b3;
       --text-muted: #4d5a70;
-      --accent: #00b4ff;
-      --accent-glow: rgba(0, 180, 255, 0.2);
-      --accent-hover: #40c8ff;
+      --accent: #E53935;
+      --accent-glow: rgba(229, 57, 53, 0.35);
+      --accent-hover: #EF5350;
+      --accent-dark: #B71C1C;
       --danger: #ff4d5a;
       --danger-glow: rgba(255, 77, 90, 0.15);
       --success: #00e09a;
@@ -82,8 +83,8 @@
       width: 72px;
       height: 72px;
       border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent) 0%, #0066aa 100%);
-      box-shadow: 0 8px 32px rgba(0, 170, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -112,8 +113,8 @@
       padding: 14px 24px;
       border: none;
       border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent) 0%, #0077cc 100%);
-      box-shadow: 0 4px 20px rgba(0, 170, 255, 0.25);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      box-shadow: 0 4px 20px var(--accent-glow);
       color: #fff;
       font-family: inherit;
       font-size: 0.95rem;
@@ -124,7 +125,7 @@
 
     .start-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 28px rgba(0, 170, 255, 0.35);
+      box-shadow: 0 6px 28px var(--accent-glow);
     }
 
     .start-btn:active {
