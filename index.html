@@ -1631,7 +1631,8 @@
         }
       }
       if (playTitleEl) playTitleEl.textContent = v.title;
-      if (playMetaEl) playMetaEl.textContent = `${v.platform} • ${v.channel} • ${v.uploadDate.toDateString()}`;
+      const playDateObj = v.uploadDate instanceof Date ? v.uploadDate : new Date(v.uploadDate);
+      if (playMetaEl) playMetaEl.textContent = `${v.platform} • ${v.channel} • ${playDateObj.toDateString()}`;
       if (playModalEl) playModalEl.classList.remove("hidden");
     }
 
