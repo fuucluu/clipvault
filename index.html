@@ -1554,7 +1554,7 @@
         const timeOffset = Math.random() * maxTime;
         const uId = real.id;
 
-        return {
+        const videoObj = {
           id: uId,
           platform: real.platform,
           title: real.title,
@@ -1567,6 +1567,12 @@
           searchType: cfg.searchType,
           searchSource: source // Track data origin
         };
+
+        // Register in global video store (persists for collections)
+        if (!state.videos) state.videos = {};
+        state.videos[uId] = videoObj;
+
+        return videoObj;
       });
 
       log('gen() results:', { term, count: results.length, source });
@@ -1664,8 +1670,13 @@
     /* render */
     const resultsEl = document.getElementById("results");
 
-    // Helper: Find video by ID across all clips
+    // Helper: Find video by ID - checks global registry first, then clips
     function findVideoById(videoId) {
+      // First check global video store (persists even after search deletion)
+      if (state.videos && state.videos[videoId]) {
+        return state.videos[videoId];
+      }
+      // Fallback: search clips (for backwards compatibility)
       for (const d in state.clips) {
         for (const t in state.clips[d]) {
           const found = state.clips[d][t].find(v => v.id === videoId);
