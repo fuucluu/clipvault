@@ -1304,7 +1304,10 @@
         protectLocked: true,
         accountType: "any"
       },
-      clips: {}
+      clips: {},
+      renamedTerms: {},   // { "date|term": "Custom Name" }
+      pinnedTerms: [],    // ["date|term", ...]
+      collections: {}     // { "id": { name: "Watch Later", videoIds: [] } }
     };
 
     // Active state (merged with localStorage on load)
@@ -1322,7 +1325,10 @@
           state = {
             ...DEFAULT_STATE,
             ...parsed,
-            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) }
+            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
+            renamedTerms: { ...DEFAULT_STATE.renamedTerms, ...(parsed.renamedTerms || {}) },
+            pinnedTerms: parsed.pinnedTerms || DEFAULT_STATE.pinnedTerms,
+            collections: { ...DEFAULT_STATE.collections, ...(parsed.collections || {}) }
           };
           log('State loaded:', state);
         }
@@ -1656,9 +1662,221 @@
     /* render */
     const resultsEl = document.getElementById("results");
 
+    // Helper: Find video by ID across all clips
+    function findVideoById(videoId) {
+      for (const d in state.clips) {
+        for (const t in state.clips[d]) {
+          const found = state.clips[d][t].find(v => v.id === videoId);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    // Helper: Remove video from all collections
+    function removeVideoFromCollections(videoId) {
+      for (const cid in state.collections) {
+        state.collections[cid].videoIds = state.collections[cid].videoIds.filter(id => id !== videoId);
+      }
+    }
+
+    // Helper: Add video to collection dropdown
+    function showCollectionPicker(videoId, anchorEl) {
+      // Remove existing picker if any
+      const existing = document.querySelector(".collection-picker");
+      if (existing) existing.remove();
+
+      const picker = document.createElement("div");
+      picker.className = "collection-picker";
+      picker.style.cssText = "position:absolute;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:100;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,0.4);";
+
+      const collectionIds = Object.keys(state.collections);
+      if (collectionIds.length === 0) {
+        const msg = document.createElement("div");
+        msg.style.cssText = "color:var(--text-muted);font-size:0.8rem;padding:4px;";
+        msg.textContent = "No collections. Create one first.";
+        picker.appendChild(msg);
+      } else {
+        collectionIds.forEach(cid => {
+          const col = state.collections[cid];
+          const alreadyIn = col.videoIds.includes(videoId);
+          const item = document.createElement("div");
+          item.style.cssText = "padding:6px 10px;cursor:pointer;border-radius:4px;font-size:0.85rem;";
+          item.textContent = alreadyIn ? `✓ ${col.name}` : col.name;
+          item.style.color = alreadyIn ? "var(--accent)" : "var(--text-primary)";
+          item.onmouseenter = () => { item.style.background = "var(--bg-surface)"; };
+          item.onmouseleave = () => { item.style.background = "transparent"; };
+          item.onclick = (e) => {
+            e.stopPropagation();
+            if (!alreadyIn) {
+              state.collections[cid].videoIds.push(videoId);
+              saveState();
+            }
+            picker.remove();
+            render();
+          };
+          picker.appendChild(item);
+        });
+      }
+
+      // Position picker
+      const rect = anchorEl.getBoundingClientRect();
+      picker.style.top = (rect.bottom + 4) + "px";
+      picker.style.left = rect.left + "px";
+      picker.style.position = "fixed";
+      document.body.appendChild(picker);
+
+      // Close on click outside
+      setTimeout(() => {
+        document.addEventListener("click", function handler(e) {
+          if (!picker.contains(e.target)) {
+            picker.remove();
+            document.removeEventListener("click", handler);
+          }
+        });
+      }, 10);
+    }
+
+    // Reusable video card renderer
+    function renderVideoCard(v, collectionId = null) {
+      const V = document.createElement("div");
+      V.className = "video" + (v.locked ? " locked" : "");
+
+      const dateObj = v.uploadDate instanceof Date ? v.uploadDate : new Date(v.uploadDate);
+      const dateLabel = dateObj.toDateString();
+
+      V.innerHTML = `
+        <div class="thumb" style="cursor:pointer"><img src="${v.thumbnail}"></div>
+        <div class="v-info" style="cursor:pointer;flex:1;">
+          <div class="v-title">${v.title}</div>
+          <div class="v-meta">${v.platform} • ${v.channel} • ${dateLabel}</div>
+        </div>
+        <div class="v-btns" style="display:flex;gap:6px;align-items:center;">
+          <button class="addbtn btn-icon" title="Add to Collection" style="padding:4px 8px;font-size:0.8rem;">📁</button>
+          <button class="lockbtn ${v.locked ? "on" : ""}">${v.locked ? "Unlock" : "Lock"}</button>
+          <button class="del">Delete</button>
+        </div>`;
+
+      V.querySelector(".thumb").onclick = () => openPlay(v);
+      V.querySelector(".v-info").onclick = () => openPlay(v);
+      V.querySelector(".addbtn").onclick = (e) => {
+        e.stopPropagation();
+        showCollectionPicker(v.id, e.target);
+      };
+      V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render(); };
+      V.querySelector(".del").onclick = () => {
+        if (state.settings.protectLocked && v.locked) return;
+        // Remove from collection if in collection view
+        if (collectionId && state.collections[collectionId]) {
+          state.collections[collectionId].videoIds = state.collections[collectionId].videoIds.filter(id => id !== v.id);
+        }
+        // Also remove from all clips
+        for (const d in state.clips) {
+          for (const t in state.clips[d]) {
+            state.clips[d][t] = state.clips[d][t].filter(x => x.id !== v.id);
+          }
+        }
+        removeVideoFromCollections(v.id);
+        saveState();
+        render();
+      };
+
+      return V;
+    }
     function render() {
       if (!resultsEl) return;
       resultsEl.innerHTML = "";
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // COLLECTIONS SECTION
+      // ═══════════════════════════════════════════════════════════════════════
+      const collectionSection = document.createElement("div");
+      collectionSection.className = "collections-section";
+      collectionSection.style.marginBottom = "24px";
+
+      // Create collection button
+      const createBtn = document.createElement("button");
+      createBtn.className = "btn-icon";
+      createBtn.style.cssText = "margin-bottom:12px;padding:10px 16px;";
+      createBtn.textContent = "+ New Collection";
+      createBtn.onclick = () => {
+        const name = prompt("Collection name:");
+        if (name && name.trim()) {
+          const id = crypto.randomUUID();
+          state.collections[id] = { name: name.trim(), videoIds: [] };
+          saveState();
+          render();
+        }
+      };
+      collectionSection.appendChild(createBtn);
+
+      // Render each collection
+      for (const cid in state.collections) {
+        const col = state.collections[cid];
+        const colDiv = document.createElement("div");
+        colDiv.className = "collection";
+        colDiv.style.cssText = "background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;";
+
+        const colHeader = document.createElement("div");
+        colHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;cursor:pointer;";
+
+        const colName = document.createElement("span");
+        colName.style.fontWeight = "600";
+        colName.textContent = `📁 ${col.name} (${col.videoIds.length})`;
+        colHeader.appendChild(colName);
+
+        const colDel = document.createElement("button");
+        colDel.className = "btn-icon-danger";
+        colDel.style.cssText = "padding:4px 8px;font-size:0.7rem;";
+        colDel.textContent = "Delete";
+        colDel.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete collection "${col.name}"?`)) {
+            delete state.collections[cid];
+            saveState();
+            render();
+          }
+        };
+        colHeader.appendChild(colDel);
+        colDiv.appendChild(colHeader);
+
+        // Collection videos container (collapsed by default)
+        const colVideos = document.createElement("div");
+        colVideos.style.cssText = "margin-top:10px;display:none;";
+
+        colHeader.onclick = (e) => {
+          if (e.target.tagName !== "BUTTON") {
+            colVideos.style.display = colVideos.style.display === "none" ? "block" : "none";
+          }
+        };
+
+        // Find and render videos in this collection
+        col.videoIds.forEach(vid => {
+          const v = findVideoById(vid);
+          if (v) {
+            const vDiv = renderVideoCard(v, cid);
+            colVideos.appendChild(vDiv);
+          }
+        });
+
+        if (col.videoIds.length === 0) {
+          const emptyMsg = document.createElement("div");
+          emptyMsg.style.cssText = "color:var(--text-muted);font-size:0.85rem;padding:8px 0;";
+          emptyMsg.textContent = "No videos yet. Use 📁 on video cards to add.";
+          colVideos.appendChild(emptyMsg);
+        }
+
+        colDiv.appendChild(colVideos);
+        collectionSection.appendChild(colDiv);
+      }
+
+      if (Object.keys(state.collections).length > 0 || true) {
+        resultsEl.appendChild(collectionSection);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // DATED SEARCH RESULTS
+      // ═══════════════════════════════════════════════════════════════════════
       for (const d in state.clips) {
         const D = document.createElement("div");
         D.className = "date";
@@ -1697,15 +1915,87 @@
           }
         };
 
-        for (const t in state.clips[d]) {
+        // Sort terms: pinned first
+        const terms = Object.keys(state.clips[d]);
+        terms.sort((a, b) => {
+          const aKey = `${d}|${a}`;
+          const bKey = `${d}|${b}`;
+          const aPinned = state.pinnedTerms.includes(aKey);
+          const bPinned = state.pinnedTerms.includes(bKey);
+          if (aPinned && !bPinned) return -1;
+          if (!aPinned && bPinned) return 1;
+          return 0;
+        });
+
+        for (const t of terms) {
+          const termKey = `${d}|${t}`;
           const T = document.createElement("div");
           T.className = "term";
           const th = document.createElement("div");
           th.className = "term-h";
 
+          // Pin indicator
+          const isPinned = state.pinnedTerms.includes(termKey);
+          if (isPinned) {
+            const pinIcon = document.createElement("span");
+            pinIcon.textContent = "📌 ";
+            pinIcon.style.marginRight = "4px";
+            th.appendChild(pinIcon);
+          }
+
+          // Term title (use renamed if exists)
+          const displayName = state.renamedTerms[termKey] || t;
           const thSpan = document.createElement("span");
-          thSpan.textContent = t;
+          thSpan.textContent = displayName;
+          thSpan.style.cursor = "pointer";
+          thSpan.title = "Double-click to rename";
           th.appendChild(thSpan);
+
+          // Rename on double-click
+          thSpan.ondblclick = (e) => {
+            e.stopPropagation();
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = displayName;
+            input.style.cssText = "background:#1a1d24;border:1px solid var(--accent);color:#fff;padding:4px 8px;border-radius:6px;font-size:inherit;width:150px;";
+            thSpan.replaceWith(input);
+            input.focus();
+            input.select();
+
+            const save = () => {
+              const newName = input.value.trim();
+              if (newName && newName !== t) {
+                state.renamedTerms[termKey] = newName;
+              } else {
+                delete state.renamedTerms[termKey];
+              }
+              saveState();
+              render();
+            };
+
+            input.onkeydown = (ev) => {
+              if (ev.key === "Enter") { save(); }
+              if (ev.key === "Escape") { render(); }
+            };
+            input.onblur = save;
+          };
+
+          // Pin button
+          const pinBtn = document.createElement("button");
+          pinBtn.className = "btn-icon";
+          pinBtn.style.cssText = "padding:4px 8px;font-size:0.7rem;margin-left:8px;";
+          pinBtn.textContent = isPinned ? "Unpin" : "Pin";
+          pinBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (isPinned) {
+              state.pinnedTerms = state.pinnedTerms.filter(k => k !== termKey);
+            } else {
+              state.pinnedTerms.push(termKey);
+            }
+            saveState();
+            render();
+          };
+          th.appendChild(pinBtn);
 
           const thDel = document.createElement("button");
           thDel.className = "btn-icon-danger";
@@ -1716,7 +2006,6 @@
           th.appendChild(thDel);
 
           const tb = document.createElement("div");
-          const termKey = `${d}|${t}`;
 
           // Restore collapsed state for term folder
           if (collapsedTerms.has(termKey)) {
@@ -1724,7 +2013,7 @@
           }
 
           th.onclick = (e) => {
-            if (e.target !== thDel) {
+            if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
               const isCollapsed = tb.style.display === "none";
               tb.style.display = isCollapsed ? "block" : "none";
               // Track collapse state
@@ -1751,7 +2040,8 @@
             <div class="v-meta">${v.platform} • ${v.channel} • ${dateLabel}</div>
              <div style="font-size:0.65rem;opacity:0.5;margin-top:2px">${v.accountType || "User"} • ${v.searchType || "All"}</div>
           </div>
-          <div class="v-btns">
+          <div class="v-btns" style="display:flex;gap:6px;align-items:center;">
+            <button class="addbtn btn-icon" title="Add to Collection" style="padding:4px 8px;font-size:0.8rem;">📁</button>
             <button class="lockbtn ${v.locked ? "on" : ""}">${v.locked ? "Unlock" : "Lock"}</button>
             <button class="del">Delete</button>
           </div>`;
@@ -1759,6 +2049,10 @@
             // Interaction handlers
             V.querySelector(".thumb").onclick = () => openPlay(v);
             V.querySelector(".v-info").onclick = () => openPlay(v);
+            V.querySelector(".addbtn").onclick = (e) => {
+              e.stopPropagation();
+              showCollectionPicker(v.id, e.target);
+            };
 
             V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render() };
             V.querySelector(".del").onclick = () => {
@@ -1767,6 +2061,7 @@
                 state.clips[d][t] = state.clips[d][t].filter(x => x !== v);
                 if (state.clips[d][t].length === 0) delete state.clips[d][t];
                 if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
+                removeVideoFromCollections(v.id);
                 saveState();
                 render();
               }
