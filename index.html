@@ -1828,20 +1828,10 @@
       };
       V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render(); };
       V.querySelector(".del").onclick = () => {
-        if (state.settings.protectLocked && v.locked) return;
-        // Remove from collection if in collection view
-        if (collectionId && state.collections[collectionId]) {
-          state.collections[collectionId].videoIds = state.collections[collectionId].videoIds.filter(id => id !== v.id);
+        // Context-aware: only delete from THIS collection, not globally
+        if (collectionId) {
+          deleteFromCollection(v.id, collectionId);
         }
-        // Also remove from all clips
-        for (const d in state.clips) {
-          for (const t in state.clips[d]) {
-            state.clips[d][t] = state.clips[d][t].filter(x => x.id !== v.id);
-          }
-        }
-        removeVideoFromCollections(v.id);
-        saveState();
-        render();
       };
 
       return V;
@@ -2119,15 +2109,8 @@
 
             V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render() };
             V.querySelector(".del").onclick = () => {
-              if (state.settings.protectLocked && v.locked) return; // Protected
-              if (!v.locked || !state.settings.protectLocked) {
-                state.clips[d][t] = state.clips[d][t].filter(x => x !== v);
-                if (state.clips[d][t].length === 0) delete state.clips[d][t];
-                if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
-                removeVideoFromCollections(v.id);
-                saveState();
-                render();
-              }
+              // Context-aware: only delete from THIS search, not globally
+              deleteFromSearch(v.id, d, t);
             };
             tb.appendChild(V);
           });
