@@ -1734,7 +1734,7 @@
       render();
     }
 
-    // Delete from everywhere (global delete)
+    // Delete from everywhere (global delete) - ONLY function that removes from video store
     function deleteEverywhere(videoId) {
       const v = findVideoById(videoId);
       if (!v) return;
@@ -1750,6 +1750,10 @@
       }
       // Remove from all collections
       removeVideoFromCollections(videoId);
+      // Remove from global video store (ONLY deleteEverywhere does this)
+      if (state.videos && state.videos[videoId]) {
+        delete state.videos[videoId];
+      }
       saveState();
       render();
     }
