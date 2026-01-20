@@ -1307,7 +1307,8 @@
       clips: {},
       renamedTerms: {},   // { "date|term": "Custom Name" }
       pinnedTerms: [],    // ["date|term", ...]
-      collections: {}     // { "id": { name: "Watch Later", videoIds: [] } }
+      collections: {},    // { "id": { name: "Watch Later", videoIds: [] } }
+      videos: {}          // Global video registry { videoId: videoObject }
     };
 
     // Active state (merged with localStorage on load)
@@ -1328,7 +1329,8 @@
             settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
             renamedTerms: { ...DEFAULT_STATE.renamedTerms, ...(parsed.renamedTerms || {}) },
             pinnedTerms: parsed.pinnedTerms || DEFAULT_STATE.pinnedTerms,
-            collections: { ...DEFAULT_STATE.collections, ...(parsed.collections || {}) }
+            collections: { ...DEFAULT_STATE.collections, ...(parsed.collections || {}) },
+            videos: { ...DEFAULT_STATE.videos, ...(parsed.videos || {}) }
           };
           log('State loaded:', state);
         }
@@ -1678,6 +1680,67 @@
       for (const cid in state.collections) {
         state.collections[cid].videoIds = state.collections[cid].videoIds.filter(id => id !== videoId);
       }
+    }
+
+    // Helper: Check if video has any remaining references
+    function hasAnyReferences(videoId) {
+      // Check if in any search
+      for (const d in state.clips) {
+        for (const t in state.clips[d]) {
+          if (state.clips[d][t].some(v => v.id === videoId)) return true;
+        }
+      }
+      // Check if in any collection
+      for (const cid in state.collections) {
+        if (state.collections[cid].videoIds.includes(videoId)) return true;
+      }
+      return false;
+    }
+
+    // Reference-safe: Delete from search only
+    function deleteFromSearch(videoId, date, term) {
+      const v = findVideoById(videoId);
+      if (!v) return;
+      if (state.settings.protectLocked && v.locked) return;
+
+      state.clips[date][term] = state.clips[date][term].filter(x => x.id !== videoId);
+      if (state.clips[date][term].length === 0) delete state.clips[date][term];
+      if (Object.keys(state.clips[date]).length === 0) delete state.clips[date];
+      saveState();
+      render();
+    }
+
+    // Reference-safe: Delete from collection only
+    function deleteFromCollection(videoId, collectionId) {
+      const v = findVideoById(videoId);
+      if (!v) return;
+      if (state.settings.protectLocked && v.locked) return;
+
+      if (state.collections[collectionId]) {
+        state.collections[collectionId].videoIds = state.collections[collectionId].videoIds.filter(id => id !== videoId);
+      }
+      saveState();
+      render();
+    }
+
+    // Delete from everywhere (global delete)
+    function deleteEverywhere(videoId) {
+      const v = findVideoById(videoId);
+      if (!v) return;
+      if (state.settings.protectLocked && v.locked) return;
+
+      // Remove from all clips
+      for (const d in state.clips) {
+        for (const t in state.clips[d]) {
+          state.clips[d][t] = state.clips[d][t].filter(x => x.id !== videoId);
+          if (state.clips[d][t].length === 0) delete state.clips[d][t];
+        }
+        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
+      }
+      // Remove from all collections
+      removeVideoFromCollections(videoId);
+      saveState();
+      render();
     }
 
     // Helper: Add video to collection dropdown
