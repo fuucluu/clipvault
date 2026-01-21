@@ -2122,7 +2122,15 @@
               showCollectionPicker(v.id, e.target);
             };
 
-            V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render() };
+            V.querySelector(".lockbtn").onclick = () => {
+              v.locked = !v.locked;
+              // Sync to global video store
+              if (state.videos && state.videos[v.id]) {
+                state.videos[v.id].locked = v.locked;
+              }
+              saveState();
+              render();
+            };
             V.querySelector(".del").onclick = () => {
               // Context-aware: only delete from THIS search, not globally
               deleteFromSearch(v.id, d, t);
