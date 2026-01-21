@@ -1935,8 +1935,9 @@
         </div>
         <div class="v-btns" style="display:flex;gap:6px;align-items:center;">
           <button class="addbtn btn-icon" title="Add to Collection" style="padding:4px 8px;font-size:0.8rem;">📁</button>
-          <button class="lockbtn ${v.locked ? "on" : ""}">${v.locked ? "Unlock" : "Lock"}</button>
-          <button class="del">Delete</button>
+          <button class="lockbtn ${v.locked ? "on" : ""}" title="${v.locked ? "Unlock this clip" : "Lock this clip"}">${v.locked ? "Unlock" : "Lock"}</button>
+          <button class="del" title="${collectionId ? "Remove from this collection" : "Remove from search"}">${collectionId ? "Remove" : "Remove"}</button>
+          <button class="del-global" title="Delete everywhere (Danger!)" style="color:var(--danger);font-weight:bold;">×</button>
         </div>`;
 
       V.querySelector(".thumb").onclick = () => openPlay(v);
@@ -1945,12 +1946,29 @@
         e.stopPropagation();
         showCollectionPicker(v.id, e.target);
       };
-      V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render(); };
+      V.querySelector(".lockbtn").onclick = () => {
+        v.locked = !v.locked;
+        if (state.videos && state.videos[v.id]) state.videos[v.id].locked = v.locked;
+        // Sync Registry if not using state.videos alias? 
+        // Default logic uses state.clips[id].
+        if (state.clips[v.id]) state.clips[v.id].locked = v.locked;
+        saveState();
+        render();
+      };
+
+      // Context remove
       V.querySelector(".del").onclick = () => {
-        // Context-aware: only delete from THIS collection, not globally
         if (collectionId) {
-          deleteFromCollection(v.id, collectionId);
+          removeFromCollection(v.id, collectionId);
+        } else {
+          // Fallback or explicit warning
+          showToast("Use list view to remove from search");
         }
+      };
+
+      // Global delete
+      V.querySelector(".del-global").onclick = () => {
+        deleteEverywhere(v.id);
       };
 
       return V;
@@ -2251,8 +2269,9 @@
           </div>
           <div class="v-btns" style="display:flex;gap:6px;align-items:center;">
             <button class="addbtn btn-icon" title="Add to Collection" style="padding:4px 8px;font-size:0.8rem;">📁</button>
-            <button class="lockbtn ${v.locked ? "on" : ""}">${v.locked ? "Unlock" : "Lock"}</button>
-            <button class="del">Delete</button>
+            <button class="lockbtn ${v.locked ? "on" : ""}" title="${v.locked ? "Unlock this clip" : "Lock this clip"}">${v.locked ? "Unlock" : "Lock"}</button>
+            <button class="del" title="Remove this clip from search results">Remove from Search</button>
+            <button class="del-global" title="Delete everywhere (Danger!)" style="color:var(--danger);font-weight:bold;">×</button>
           </div>`;
 
             // Interaction handlers
@@ -2266,15 +2285,18 @@
             V.querySelector(".lockbtn").onclick = () => {
               v.locked = !v.locked;
               // Sync to global video store
-              if (state.videos && state.videos[v.id]) {
-                state.videos[v.id].locked = v.locked;
+              if (state.clips[v.id]) {
+                state.clips[v.id].locked = v.locked;
               }
               saveState();
               render();
             };
             V.querySelector(".del").onclick = () => {
               // V2: Remove from Search Index Only
-              removeFromSearch(v.id, t, d); // Note arg order: id, term, date
+              removeFromSearch(v.id, t, d);
+            };
+            V.querySelector(".del-global").onclick = () => {
+              deleteEverywhere(v.id);
             };
             tb.appendChild(V);
           });
@@ -2294,43 +2316,73 @@
     // BULK DELETE (SAFE FAILURE)
     // ═══════════════════════════════════════════════════════════════════════
     function deleteDate(d) {
-      if (!state.clips || !state.clips[d]) {
-        warn('deleteDate: date not found', d);
-        return; // Safe failure
-      }
-      if (confirm(`Delete all clips from ${d}?`)) {
-        log('Deleting date:', d);
-        for (const t in state.clips[d]) {
-          if (state.settings.protectLocked) {
-            state.clips[d][t] = state.clips[d][t].filter(v => v.locked);
-          } else {
-            state.clips[d][t] = [];
+      if (confirm(`Remove all search results from ${d}?`)) {
+        log('Deleting date (from index):', d);
+
+        // Scan index for Term/Date buckets
+        for (const t in state.searchIndex) {
+          if (state.searchIndex[t][d]) {
+            if (state.settings.protectLocked) {
+              // Filter out locked
+              state.searchIndex[t][d] = state.searchIndex[t][d].filter(id => {
+                const v = state.clips[id];
+                return v && v.locked;
+              });
+            } else {
+              delete state.searchIndex[t][d];
+            }
+            // Cleanup Term if empty
+            if (state.searchIndex[t] && Object.keys(state.searchIndex[t]).length === 0) {
+              delete state.searchIndex[t];
+            }
           }
-          if (state.clips[d][t].length === 0) delete state.clips[d][t];
         }
-        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
         saveState();
         render();
       }
     }
 
     function deleteTerm(d, t) {
-      if (!state.clips || !state.clips[d] || !state.clips[d][t]) {
-        warn('deleteTerm: term not found', d, t);
-        return; // Safe failure
-      }
-      if (confirm(`Delete all clips for "${t}"?`)) {
-        log('Deleting term:', t, 'from', d);
-        if (state.settings.protectLocked) {
-          state.clips[d][t] = state.clips[d][t].filter(v => v.locked);
-        } else {
-          state.clips[d][t] = [];
+      if (!state.searchIndex[t]) return;
+
+      if (confirm(`Remove all results for "${t}" (${d})?`)) {
+        log('Deleting term bucket:', t, d);
+
+        if (state.searchIndex[t][d]) {
+          if (state.settings.protectLocked) {
+            state.searchIndex[t][d] = state.searchIndex[t][d].filter(id => {
+              const v = state.clips[id];
+              return v && v.locked;
+            });
+          } else {
+            delete state.searchIndex[t][d];
+          }
+          if (Object.keys(state.searchIndex[t]).length === 0) {
+            delete state.searchIndex[t];
+          }
         }
-        if (state.clips[d][t].length === 0) delete state.clips[d][t];
-        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
         saveState();
         render();
       }
+    }
+
+    function runSearch() {
+      const term = searchInputEl.value.trim();
+      if (!term) return;
+
+      const n = +maxVideosEl.value;
+      const cfg = {
+        backDate: backDateEl.value,
+        searchType: searchByEl.value,
+        accountType: searchAccountTypeEl.value
+      };
+
+      // V2 Gen: Updates state.clips and state.searchIndex internally
+      gen(term, n, cfg);
+
+      saveState();
+      render();
+      closePopup();
     }
 
     // Init at the END
