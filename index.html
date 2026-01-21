@@ -1304,11 +1304,11 @@
         protectLocked: true,
         accountType: "any"
       },
-      clips: {},
+      clips: {},          // REGISTRY: { [id]: { id, title, ... } }
+      searchIndex: {},    // SEARCH: { [term]: { [date]: [id, id] } }
+      collections: {},    // { [id]: { id, name, clipIds: [] } }
       renamedTerms: {},   // { "date|term": "Custom Name" }
-      pinnedTerms: [],    // ["date|term", ...]
-      collections: {},    // { "id": { name: "Watch Later", videoIds: [] } }
-      videos: {}          // Global video registry { videoId: videoObject }
+      pinnedTerms: []     // ["date|term", ...]
     };
 
     // Active state (merged with localStorage on load)
@@ -1328,14 +1328,66 @@
             ...parsed,
             settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
             renamedTerms: { ...DEFAULT_STATE.renamedTerms, ...(parsed.renamedTerms || {}) },
-            pinnedTerms: parsed.pinnedTerms || DEFAULT_STATE.pinnedTerms,
-            collections: { ...DEFAULT_STATE.collections, ...(parsed.collections || {}) },
-            videos: { ...DEFAULT_STATE.videos, ...(parsed.videos || {}) }
+            collections: parsed.collections || {},
+            clips: parsed.clips || {}, // Will be migrated if old structure
+            searchIndex: parsed.searchIndex || {},
+            pinnedTerms: parsed.pinnedTerms || []
           };
+
+          // MIGRATION: V1 -> V2 (Reference-Based Hardening)
+          // Detect old structure where clips was search results (checking if keys are dates like "24 hours")
+          // OR if searchIndex is missing but clips exists
+          const isV1 = !state.searchIndex || Object.keys(state.searchIndex).length === 0;
+          if (isV1 && Object.keys(state.clips).length > 0) {
+            // Check if clips is actually old structure (Date keys)
+            const testKey = Object.keys(state.clips)[0];
+            if (testKey && (testKey.includes("hours") || testKey.includes("days") || testKey.includes("weeks"))) {
+              log("Migrating state to V2 (Reference-Based)...");
+              const oldSearch = JSON.parse(JSON.stringify(state.clips));
+              const oldVideos = parsed.videos || {};
+
+              state.clips = {}; // Clear for Registry
+              state.searchIndex = {};
+
+              // 1. Populate Registry from old global store
+              for (const vid in oldVideos) {
+                state.clips[vid] = oldVideos[vid];
+              }
+
+              // 2. Migrate Search Results & Harvest Clips
+              for (const date in oldSearch) {
+                for (const term in oldSearch[date]) {
+                  const list = oldSearch[date][term];
+                  if (!state.searchIndex[term]) state.searchIndex[term] = {};
+                  if (!state.searchIndex[term][date]) state.searchIndex[term][date] = [];
+
+                  list.forEach(v => {
+                    // Ensure in registry
+                    if (!state.clips[v.id]) state.clips[v.id] = v;
+                    // Add ref
+                    if (!state.searchIndex[term][date].includes(v.id)) {
+                      state.searchIndex[term][date].push(v.id);
+                    }
+                  });
+                }
+              }
+
+              // 3. Migrate Collections (videoIds -> clipIds)
+              for (const cid in state.collections) {
+                const col = state.collections[cid];
+                if (col.videoIds) {
+                  col.clipIds = col.videoIds;
+                  delete col.videoIds;
+                }
+              }
+              log("Migration complete.");
+            }
+          }
           log('State loaded:', state);
         }
       } catch (e) {
-        warn('Load failed, using defaults:', e);
+        console.error("State load failed", e);
+        // Reset if corrupt
         state = JSON.parse(JSON.stringify(DEFAULT_STATE));
       }
       render();
@@ -1474,7 +1526,7 @@
     // ═══════════════════════════════════════════════════════════════════════
     const REAL_CLIPS = [
       { id: "jfKfPfyJRdk", title: "lofi hip hop radio - beats to relax/study to", channel: "Lofi Girl", platform: "YouTube" },
-      { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up", channel: "Rick Astley", platform: "YouTube" },
+      { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give Up", channel: "Rick Astley", platform: "YouTube" },
       { id: "jNQXAC9IVRw", title: "Me at the zoo", channel: "jawed", platform: "YouTube" },
       { id: "M7fi_ChqrQA", title: "History of the World, I Guess", channel: "bill wurtz", platform: "YouTube" },
       { id: "L_LUpnjgPso", title: "Cyberpunk 2077 - Official Trailer", channel: "Cyberpunk 2077", platform: "YouTube" },
@@ -1562,17 +1614,32 @@
           uploadDate: new Date(now - timeOffset),
           thumbnail: `https://img.youtube.com/vi/${uId}/mqdefault.jpg`,
           locked: false,
+          deleted: false,
           url: `https://www.youtube.com/watch?v=${uId}`,
           accountType: "Official",
           searchType: cfg.searchType,
-          searchSource: source // Track data origin
+          searchSource: source
         };
 
-        // Register in global video store (persists for collections)
-        if (!state.videos) state.videos = {};
-        state.videos[uId] = videoObj;
-
+        // 1. Save to Registry (Immutable Source)
+        state.clips[uId] = videoObj;
         return videoObj;
+      });
+
+      // 2. Add ID References to Search Index
+      const bucketDate = cfg.backDate; // e.g., "24 hours"
+      if (!state.searchIndex[term]) state.searchIndex[term] = {};
+
+      // We need to merge if key exists to allow accumulation or just set
+      // The old behavior accumulated. 
+      if (!state.searchIndex[term][bucketDate]) state.searchIndex[term][bucketDate] = [];
+
+      const newIds = results.map(v => v.id);
+      // Append unique
+      newIds.forEach(id => {
+        if (!state.searchIndex[term][bucketDate].includes(id)) {
+          state.searchIndex[term][bucketDate].push(id);
+        }
       });
 
       log('gen() results:', { term, count: results.length, source });
@@ -1670,92 +1737,122 @@
     /* render */
     const resultsEl = document.getElementById("results");
 
-    // Helper: Find video by ID - checks global registry first, then clips
+    // Find video in REGISTRY
     function findVideoById(videoId) {
-      // First check global video store (persists even after search deletion)
-      if (state.videos && state.videos[videoId]) {
-        return state.videos[videoId];
-      }
-      // Fallback: search clips (for backwards compatibility)
-      for (const d in state.clips) {
-        for (const t in state.clips[d]) {
-          const found = state.clips[d][t].find(v => v.id === videoId);
-          if (found) return found;
+      return state.clips[videoId] || null;
+    }
+
+    function isVideoRef(videoId) {
+      // Check search index
+      for (const t in state.searchIndex) {
+        for (const d in state.searchIndex[t]) {
+          if (state.searchIndex[t][d].includes(videoId)) return true;
         }
       }
-      return null;
+      // Check collections
+      for (const cid in state.collections) {
+        if (state.collections[cid].clipIds.includes(videoId)) return true;
+      }
+      return false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DELETE & REFERENCE MANAGEMENT (V2 Contracts)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Toast Feedback (UX Polish)
+    function showToast(msg) {
+      const t = document.createElement("div");
+      t.textContent = msg;
+      t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border);padding:8px 16px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);color:#fff;font-size:0.9rem;z-index:9999;opacity:0;transition:opacity 0.2s;";
+      document.body.appendChild(t);
+      // Animate in
+      requestAnimationFrame(() => t.style.opacity = "1");
+      // Remove
+      setTimeout(() => {
+        t.style.opacity = "0";
+        setTimeout(() => t.remove(), 200);
+      }, 2000);
     }
 
     // Helper: Remove video from all collections
     function removeVideoFromCollections(videoId) {
       for (const cid in state.collections) {
-        state.collections[cid].videoIds = state.collections[cid].videoIds.filter(id => id !== videoId);
+        state.collections[cid].clipIds = state.collections[cid].clipIds.filter(id => id !== videoId);
       }
     }
 
-    // Helper: Check if video has any remaining references
-    function hasAnyReferences(videoId) {
-      // Check if in any search
-      for (const d in state.clips) {
-        for (const t in state.clips[d]) {
-          if (state.clips[d][t].some(v => v.id === videoId)) return true;
-        }
-      }
-      // Check if in any collection
-      for (const cid in state.collections) {
-        if (state.collections[cid].videoIds.includes(videoId)) return true;
-      }
-      return false;
-    }
-
-    // Reference-safe: Delete from search only
-    function deleteFromSearch(videoId, date, term) {
+    // 1. Remove from Search (Index Only)
+    function removeFromSearch(videoId, term, date) {
       const v = findVideoById(videoId);
       if (!v) return;
-      if (state.settings.protectLocked && v.locked) return;
+      // Locked check allowed for REMOVING REFERENCE? Prompt: "allows Remove from Search" if locked.
+      // So no lock check here.
 
-      state.clips[date][term] = state.clips[date][term].filter(x => x.id !== videoId);
-      if (state.clips[date][term].length === 0) delete state.clips[date][term];
-      if (Object.keys(state.clips[date]).length === 0) delete state.clips[date];
+      if (state.searchIndex[term] && state.searchIndex[term][date]) {
+        state.searchIndex[term][date] = state.searchIndex[term][date].filter(id => id !== videoId);
+        // Cleanup empty
+        if (state.searchIndex[term][date].length === 0) delete state.searchIndex[term][date];
+        if (Object.keys(state.searchIndex[term]).length === 0) delete state.searchIndex[term];
+      }
       saveState();
       render();
+      showToast("Removed from search results");
     }
 
-    // Reference-safe: Delete from collection only
-    function deleteFromCollection(videoId, collectionId) {
+    // 2. Remove from Collection (Collection Only)
+    function removeFromCollection(videoId, collectionId) {
       const v = findVideoById(videoId);
       if (!v) return;
-      if (state.settings.protectLocked && v.locked) return;
+      // Prompt: "allows Remove from Collection" even if locked.
 
       if (state.collections[collectionId]) {
-        state.collections[collectionId].videoIds = state.collections[collectionId].videoIds.filter(id => id !== videoId);
+        state.collections[collectionId].clipIds = state.collections[collectionId].clipIds.filter(id => id !== videoId);
       }
       saveState();
       render();
+      showToast("Removed from collection");
     }
 
-    // Delete from everywhere (global delete) - ONLY function that removes from video store
+    // 3. Delete Everywhere (Global + Cascading)
     function deleteEverywhere(videoId) {
       const v = findVideoById(videoId);
       if (!v) return;
-      if (state.settings.protectLocked && v.locked) return;
 
-      // Remove from all clips
-      for (const d in state.clips) {
-        for (const t in state.clips[d]) {
-          state.clips[d][t] = state.clips[d][t].filter(x => x.id !== videoId);
-          if (state.clips[d][t].length === 0) delete state.clips[d][t];
-        }
-        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
+      // Lock Check (STRICT)
+      if (v.locked) {
+        alert("Cannot delete locked video globally.");
+        return;
       }
-      // Remove from all collections
+
+      if (!confirm("Delete this video everywhere? This cannot be undone.")) return;
+
+      // 1. Remove from Registry
+      v.deleted = true; // Soft delete first? Prompt says "state.clips... deleted: false".
+      // But prompt also says "Deletes clip from: state.clips". 
+      // If I remove from state.clips, it's gone.
+      // But verifying that render loops filter (!v.deleted) implies SOFT delete support.
+      // BUT prompt says "Deletes clip from state.clips".
+      // Let's actually delete it to match "Reference-Safe Deletion" cleanup goals.
+      // BUT safeguard is to mark deleted.
+      // Given "Deletes clip from: state.clips" under "deleteEverywhere", I will delete the key.
+      delete state.clips[videoId];
+
+      // 2. Cleaning references (Optional if render checks existence, but good for hygiene)
       removeVideoFromCollections(videoId);
-      // Remove from global video store (ONLY deleteEverywhere does this)
-      if (state.videos && state.videos[videoId]) {
-        delete state.videos[videoId];
+
+      // Clean Search Index
+      for (const t in state.searchIndex) {
+        for (const d in state.searchIndex[t]) {
+          state.searchIndex[t][d] = state.searchIndex[t][d].filter(id => id !== videoId);
+          if (state.searchIndex[t][d].length === 0) delete state.searchIndex[t][d];
+        }
+        if (Object.keys(state.searchIndex[t]).length === 0) delete state.searchIndex[t];
       }
+
       saveState();
       render();
+      showToast("Deleted everywhere");
     }
 
     // Helper: Add video to collection dropdown
@@ -1777,44 +1874,51 @@
       } else {
         collectionIds.forEach(cid => {
           const col = state.collections[cid];
-          const alreadyIn = col.videoIds.includes(videoId);
+          const alreadyIn = col.clipIds.includes(videoId);
           const item = document.createElement("div");
           item.style.cssText = "padding:6px 10px;cursor:pointer;border-radius:4px;font-size:0.85rem;";
           item.textContent = alreadyIn ? `✓ ${col.name}` : col.name;
-          item.style.color = alreadyIn ? "var(--accent)" : "var(--text-primary)";
-          item.onmouseenter = () => { item.style.background = "var(--bg-surface)"; };
-          item.onmouseleave = () => { item.style.background = "transparent"; };
+          item.onmouseenter = () => item.style.background = "var(--bg-surface)";
+          item.onmouseleave = () => item.style.background = "transparent";
           item.onclick = (e) => {
             e.stopPropagation();
-            if (!alreadyIn) {
-              state.collections[cid].videoIds.push(videoId);
+            if (alreadyIn) {
+              // Remove logic could be here, but usually users want to ADD.
+              // Prompt: "allows Remove from Collection". 
+              // Toggle behavior? Or just Add?
+              // Let's implement Toggle for UX polish.
+              removeFromCollection(videoId, cid);
+            } else {
+              col.clipIds.push(videoId);
+              showToast(`Added to "${col.name}"`);
               saveState();
+              render();
             }
             picker.remove();
-            render();
           };
           picker.appendChild(item);
         });
       }
 
-      // Position picker
+      // Position logic
       const rect = anchorEl.getBoundingClientRect();
-      picker.style.top = (rect.bottom + 4) + "px";
-      picker.style.left = rect.left + "px";
-      picker.style.position = "fixed";
+      const parentRect = resultsEl.getBoundingClientRect();
+      // Approximate position relative to viewport or results?
+      // Simple offset:
+      picker.style.top = (window.scrollY + rect.bottom + 5) + "px";
+      picker.style.left = (window.scrollX + rect.left - 100) + "px";
+
       document.body.appendChild(picker);
 
-      // Close on click outside
-      setTimeout(() => {
-        document.addEventListener("click", function handler(e) {
-          if (!picker.contains(e.target)) {
-            picker.remove();
-            document.removeEventListener("click", handler);
-          }
-        });
-      }, 10);
+      // Close on outside click
+      const close = (e) => {
+        if (!picker.contains(e.target) && e.target !== anchorEl) {
+          picker.remove();
+          document.removeEventListener("click", close);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", close), 0);
     }
-
     // Reusable video card renderer
     function renderVideoCard(v, collectionId = null) {
       const V = document.createElement("div");
@@ -1871,7 +1975,7 @@
         const name = prompt("Collection name:");
         if (name && name.trim()) {
           const id = crypto.randomUUID();
-          state.collections[id] = { name: name.trim(), videoIds: [] };
+          state.collections[id] = { name: name.trim(), clipIds: [] };
           saveState();
           render();
         }
@@ -1890,7 +1994,7 @@
 
         const colName = document.createElement("span");
         colName.style.fontWeight = "600";
-        colName.textContent = `📁 ${col.name} (${col.videoIds.length})`;
+        colName.textContent = `📁 ${col.name} (${col.clipIds.length})`;
         colHeader.appendChild(colName);
 
         const colDel = document.createElement("button");
@@ -1919,7 +2023,7 @@
         };
 
         // Find and render videos in this collection
-        col.videoIds.forEach(vid => {
+        col.clipIds.forEach(vid => {
           const v = findVideoById(vid);
           if (v) {
             const vDiv = renderVideoCard(v, cid);
@@ -1927,7 +2031,7 @@
           }
         });
 
-        if (col.videoIds.length === 0) {
+        if (col.clipIds.length === 0) {
           const emptyMsg = document.createElement("div");
           emptyMsg.style.cssText = "color:var(--text-muted);font-size:0.85rem;padding:8px 0;";
           emptyMsg.textContent = "No videos yet. Use 📁 on video cards to add.";
@@ -1938,14 +2042,51 @@
         collectionSection.appendChild(colDiv);
       }
 
-      if (Object.keys(state.collections).length > 0 || true) {
+      if (Object.keys(state.collections).length > 0) {
+        // Divider
+        const div = document.createElement("h3");
+        div.textContent = "Your Collections";
+        div.style.cssText = "margin:20px 0 10px 0;font-size:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;";
+        resultsEl.appendChild(div);
+
         resultsEl.appendChild(collectionSection);
       }
 
       // ═══════════════════════════════════════════════════════════════════════
-      // DATED SEARCH RESULTS
+      // DATED SEARCH RESULTS (Reconstructed from Index)
       // ═══════════════════════════════════════════════════════════════════════
-      for (const d in state.clips) {
+      // Invert Index: Term->Date to Date->Term for display hierarchy
+      const viewData = {};
+      for (const term in state.searchIndex) {
+        for (const dateKey in state.searchIndex[term]) {
+          if (!viewData[dateKey]) viewData[dateKey] = {};
+          // Resolve IDs to Objects
+          const ids = state.searchIndex[term][dateKey];
+          const resolved = ids.map(id => state.clips[id]).filter(v => v && !v.deleted);
+
+          if (resolved.length > 0) {
+            viewData[dateKey][term] = resolved;
+          }
+        }
+      }
+
+      if (Object.keys(viewData).length > 0) {
+        const div = document.createElement("h3");
+        div.textContent = "Search Results";
+        div.style.cssText = "margin:30px 0 10px 0;font-size:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;";
+        resultsEl.appendChild(div);
+      } else if (Object.keys(state.collections).length === 0) {
+        // Empty State (No Search + No Collections)
+        resultsEl.innerHTML = `
+           <div style="text-align:center;padding:50px;color:var(--text-muted);">
+             <h2>Ready to build your vault?</h2>
+             <p>Use the search bar above to find clips.</p>
+           </div>
+         `;
+        if (startupEl) startupEl.classList.add("active"); // Or keep simple
+      }
+
+      for (const d in viewData) {
         const D = document.createElement("div");
         D.className = "date";
         const dh = document.createElement("div");
@@ -2093,7 +2234,7 @@
             }
           };
 
-          state.clips[d][t].forEach(v => {
+          viewData[d][t].forEach(v => {
             const V = document.createElement("div");
             V.className = "video" + (v.locked ? " locked" : "");
 
@@ -2132,8 +2273,8 @@
               render();
             };
             V.querySelector(".del").onclick = () => {
-              // Context-aware: only delete from THIS search, not globally
-              deleteFromSearch(v.id, d, t);
+              // V2: Remove from Search Index Only
+              removeFromSearch(v.id, t, d); // Note arg order: id, term, date
             };
             tb.appendChild(V);
           });
