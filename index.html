@@ -21,26 +21,25 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
     :root {
-      --bg-deep: #030508;
-      --bg-base: #080c14;
-      --bg-surface: #0d1220;
-      --bg-elevated: #131a2b;
-      --border: #1a2438;
-      --border-hover: #2a3a52;
-      --text-primary: #e8ecf4;
-      --text-secondary: #8994a8;
-      --text-muted: #5a6478;
-      --accent: #00aaff;
-      --accent-glow: rgba(0, 170, 255, 0.15);
-      --accent-hover: #33bbff;
-      --danger: #ff4757;
-      --danger-glow: rgba(255, 71, 87, 0.12);
-      --success: #00d68f;
+      --bg-base: #0b0c0f;
+      --bg-surface: #12141a;
+      --bg-elevated: #1a1d24;
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --text-primary: #f5f6f7;
+      --text-secondary: #a0a6b1;
+      --text-muted: #6b7280;
+      --accent: #e54848;
+      --accent-hover: #ff5c5c;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --surface-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     }
 
     * {
       box-sizing: border-box;
       -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     html,
@@ -48,11 +47,17 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background: var(--bg-deep);
+      background: #0b0c0f;
+      overflow-x: hidden;
       color: var(--text-primary);
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
+    }
+
+    body::before,
+    body::after {
+      display: none !important;
     }
 
     .screen {
@@ -80,8 +85,8 @@
       width: 72px;
       height: 72px;
       border-radius: 18px;
-      background: linear-gradient(135deg, var(--accent) 0%, #0066aa 100%);
-      box-shadow: 0 8px 32px rgba(0, 170, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      box-shadow: 0 8px 32px var(--accent-glow), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -110,8 +115,8 @@
       padding: 14px 24px;
       border: none;
       border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent) 0%, #0077cc 100%);
-      box-shadow: 0 4px 20px rgba(0, 170, 255, 0.25);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+      box-shadow: 0 4px 20px var(--accent-glow);
       color: #fff;
       font-family: inherit;
       font-size: 0.95rem;
@@ -122,7 +127,7 @@
 
     .start-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 28px rgba(0, 170, 255, 0.35);
+      box-shadow: 0 6px 28px var(--accent-glow);
     }
 
     .start-btn:active {
@@ -135,31 +140,32 @@
     #app {
       flex-direction: column;
       background: var(--bg-base);
+      position: relative;
+      z-index: 1;
     }
 
     .header {
-      padding: 16px 20px;
+      padding: 16px 24px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--bg-surface);
+      position: relative;
+      z-index: 10;
     }
 
     .brand {
-      font-weight: 800;
-      font-size: 1.1rem;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
     }
 
     .actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .actions span {
@@ -195,82 +201,104 @@
     ═══════════════════════════════════════════ */
     .search {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--surface-shadow);
     }
 
     .search input {
       flex: 1;
-      padding: 12px 16px;
+      padding: 14px 16px;
       border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-surface);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0f1116;
       color: var(--text-primary);
       font-family: inherit;
-      font-size: 0.9rem;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: border-color 0.2s ease;
     }
 
     .search input:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
     }
 
     .search input::placeholder {
       color: var(--text-muted);
+      font-weight: 400;
     }
 
     .search button {
-      padding: 12px 20px;
+      padding: 14px 28px;
       border-radius: 10px;
       border: none;
       background: var(--accent);
       color: #fff;
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background 0.2s ease;
     }
 
     .search button:hover {
       background: var(--accent-hover);
-      box-shadow: 0 4px 16px rgba(0, 170, 255, 0.25);
+    }
+
+    .search button:active {
+      background: var(--accent);
     }
 
     /* ═══════════════════════════════════════════
-       FOLDER STRUCTURE (DATE + TERM)
+       FOLDER STRUCTURE (SECTION DIVIDERS)
     ═══════════════════════════════════════════ */
     .date {
       border: 1px solid var(--border);
-      border-radius: 12px;
-      margin-bottom: 16px;
+      border-radius: 14px;
+      margin-bottom: 20px;
       overflow: hidden;
       background: var(--bg-surface);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     }
 
     .date-h {
-      padding: 12px 16px;
-      background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+      padding: 14px 18px;
+      background: linear-gradient(135deg, rgba(0, 170, 255, 0.08) 0%, var(--bg-elevated) 100%);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 600;
-      font-size: 0.9rem;
+      font-weight: 700;
+      font-size: 0.95rem;
       color: var(--text-primary);
-      transition: background 0.15s ease;
+      transition: all 0.2s ease;
+      border-left: 3px solid var(--accent);
     }
 
     .date-h:hover {
-      background: var(--bg-elevated);
+      background: linear-gradient(135deg, rgba(0, 170, 255, 0.12) 0%, var(--bg-elevated) 100%);
+    }
+
+    .date-h span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-h span::before {
+      content: '📅';
+      font-size: 1rem;
     }
 
     .term {
-      padding: 12px 16px;
+      padding: 16px 18px;
       border-top: 1px solid var(--border);
-      background: var(--bg-base);
+      background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-deep) 100%);
     }
 
     .term-h {
@@ -278,22 +306,37 @@
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
+      font-size: 0.9rem;
+      color: var(--accent);
       cursor: pointer;
-      margin-bottom: 10px;
-      padding: 6px 0;
-      transition: color 0.15s ease;
+      margin-bottom: 14px;
+      padding: 8px 12px;
+      background: rgba(0, 170, 255, 0.05);
+      border-radius: 8px;
+      border-left: 2px solid var(--accent);
+      transition: all 0.15s ease;
     }
 
     .term-h:hover {
-      color: var(--text-primary);
+      background: rgba(0, 170, 255, 0.1);
+      color: var(--accent-hover);
+    }
+
+    .term-h span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .term-h span::before {
+      content: '🔍';
+      font-size: 0.85rem;
     }
 
     .term-meta {
       font-size: 0.72rem;
       color: var(--text-muted);
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
 
     /* ═══════════════════════════════════════════
@@ -333,51 +376,72 @@
     }
 
     /* ═══════════════════════════════════════════
-       VIDEO CARDS (COLLECTIBLE FEEL)
+       VIDEO CARDS (COLLECTOR-GRADE)
     ═══════════════════════════════════════════ */
     .video {
       display: flex;
       gap: 14px;
       align-items: center;
-      background: var(--bg-elevated);
-      padding: 10px 12px;
+      background: var(--bg-surface);
+      padding: 14px 16px;
       border-radius: 12px;
       margin-bottom: 10px;
       border: 1px solid var(--border);
-      transition: all 0.2s ease;
+      transition: border-color 0.2s ease, background 0.2s ease;
     }
 
     .video:hover {
       border-color: var(--border-hover);
-      background: linear-gradient(135deg, var(--bg-elevated) 0%, rgba(0, 170, 255, 0.03) 100%);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      transform: translateY(-1px);
+      background: var(--bg-elevated);
     }
 
     .video.locked {
-      border: 1px solid var(--accent);
-      box-shadow: 0 0 0 1px var(--accent-glow), 0 4px 16px var(--accent-glow);
+      border-color: var(--accent);
+      background: var(--bg-elevated);
+    }
+
+    .video.locked::after {
+      content: '🔒';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--accent);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: 0 2px 8px rgba(0, 170, 255, 0.4);
     }
 
     .thumb {
-      width: 100px;
-      height: 56px;
-      border-radius: 8px;
+      width: 120px;
+      height: 68px;
+      border-radius: 10px;
       background: var(--bg-base);
       overflow: hidden;
       flex-shrink: 0;
-      border: 1px solid var(--border);
+      border: 2px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease;
+    }
+
+    .video:hover .thumb {
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(0, 170, 255, 0.2);
     }
 
     .thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.2s ease;
+      transition: transform 0.3s ease;
     }
 
     .video:hover .thumb img {
-      transform: scale(1.05);
+      transform: scale(1.08);
     }
 
     .v-info {
@@ -386,35 +450,44 @@
     }
 
     .v-title {
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
       color: var(--text-primary);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 4px;
+      transition: color 0.15s ease;
+    }
+
+    .video:hover .v-title {
+      color: var(--accent);
     }
 
     .v-meta {
-      font-size: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
       margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .v-btns {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       flex-shrink: 0;
     }
 
     .v-btns button {
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 12px;
+      border-radius: 10px;
+      padding: 8px 14px;
       font-family: inherit;
-      font-size: 0.72rem;
-      font-weight: 500;
+      font-size: 0.75rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .lockbtn {
@@ -424,29 +497,33 @@
 
     .lockbtn:hover {
       background: var(--bg-elevated);
-      border-color: var(--border-hover);
-      color: var(--text-primary);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .lockbtn.on {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent) 0%, #0077cc 100%);
       border-color: var(--accent);
       color: #fff;
+      box-shadow: 0 4px 16px rgba(0, 170, 255, 0.3);
     }
 
     .lockbtn.on:hover {
-      background: var(--accent-hover);
+      background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+      box-shadow: 0 6px 20px rgba(0, 170, 255, 0.4);
     }
 
     .del {
       background: transparent;
       color: var(--danger);
       border: 1px solid transparent;
+      opacity: 0.7;
     }
 
     .del:hover {
       background: var(--danger-glow);
       border-color: var(--danger);
+      opacity: 1;
     }
 
     .btn-icon-danger {
@@ -470,17 +547,28 @@
     }
 
     /* ═══════════════════════════════════════════
-       MODALS
+       MODALS (CONTROL PANEL FEEL)
     ═══════════════════════════════════════════ */
     .modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 200;
+      animation: modalFadeIn 0.2s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
     }
 
     .hidden {
@@ -490,61 +578,85 @@
     .box {
       background: var(--bg-surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 14px;
       width: 92%;
       max-width: 520px;
       max-height: 88vh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+      box-shadow: var(--surface-shadow);
+      animation: boxSlideIn 0.2s ease;
     }
 
-    /* POPUP */
+    @keyframes boxSlideIn {
+      from {
+        transform: translateY(20px) scale(0.97);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* POPUP BODY */
     .body {
-      padding: 20px;
+      padding: 24px;
       overflow-y: auto;
     }
 
+    .body label {
+      font-weight: 500;
+    }
+
     .foot {
-      padding: 16px 20px;
+      padding: 18px 24px;
       border-top: 1px solid var(--border);
       display: flex;
-      gap: 12px;
-      background: var(--bg-elevated);
+      gap: 14px;
+      background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-deep) 100%);
     }
 
     .foot button {
       flex: 1;
-      padding: 14px;
+      padding: 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-family: inherit;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: all 0.2s ease;
     }
 
     .primary {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent) 0%, #0077cc 100%);
       color: #fff;
+      box-shadow: 0 4px 20px rgba(0, 170, 255, 0.3);
     }
 
     .primary:hover {
-      background: var(--accent-hover);
-      box-shadow: 0 4px 16px rgba(0, 170, 255, 0.25);
+      background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+      box-shadow: 0 6px 28px rgba(0, 170, 255, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .primary:active {
+      transform: translateY(0);
     }
 
     .secondary {
-      background: var(--bg-surface);
-      color: var(--text-primary);
+      background: var(--bg-elevated);
+      color: var(--text-secondary);
       border: 1px solid var(--border);
     }
 
     .secondary:hover {
-      background: var(--bg-elevated);
+      background: var(--bg-surface);
       border-color: var(--border-hover);
+      color: var(--text-primary);
     }
 
     label {
@@ -1192,7 +1304,11 @@
         protectLocked: true,
         accountType: "any"
       },
-      clips: {}
+      clips: {},          // REGISTRY: { [id]: { id, title, ... } }
+      searchIndex: {},    // SEARCH: { [term]: { [date]: [id, id] } }
+      collections: {},    // { [id]: { id, name, clipIds: [] } }
+      renamedTerms: {},   // { "date|term": "Custom Name" }
+      pinnedTerms: []     // ["date|term", ...]
     };
 
     // Active state (merged with localStorage on load)
@@ -1210,12 +1326,68 @@
           state = {
             ...DEFAULT_STATE,
             ...parsed,
-            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) }
+            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings || {}) },
+            renamedTerms: { ...DEFAULT_STATE.renamedTerms, ...(parsed.renamedTerms || {}) },
+            collections: parsed.collections || {},
+            clips: parsed.clips || {}, // Will be migrated if old structure
+            searchIndex: parsed.searchIndex || {},
+            pinnedTerms: parsed.pinnedTerms || []
           };
+
+          // MIGRATION: V1 -> V2 (Reference-Based Hardening)
+          // Detect old structure where clips was search results (checking if keys are dates like "24 hours")
+          // OR if searchIndex is missing but clips exists
+          const isV1 = !state.searchIndex || Object.keys(state.searchIndex).length === 0;
+          if (isV1 && Object.keys(state.clips).length > 0) {
+            // Check if clips is actually old structure (Date keys)
+            const testKey = Object.keys(state.clips)[0];
+            if (testKey && (testKey.includes("hours") || testKey.includes("days") || testKey.includes("weeks"))) {
+              log("Migrating state to V2 (Reference-Based)...");
+              const oldSearch = JSON.parse(JSON.stringify(state.clips));
+              const oldVideos = parsed.videos || {};
+
+              state.clips = {}; // Clear for Registry
+              state.searchIndex = {};
+
+              // 1. Populate Registry from old global store
+              for (const vid in oldVideos) {
+                state.clips[vid] = oldVideos[vid];
+              }
+
+              // 2. Migrate Search Results & Harvest Clips
+              for (const date in oldSearch) {
+                for (const term in oldSearch[date]) {
+                  const list = oldSearch[date][term];
+                  if (!state.searchIndex[term]) state.searchIndex[term] = {};
+                  if (!state.searchIndex[term][date]) state.searchIndex[term][date] = [];
+
+                  list.forEach(v => {
+                    // Ensure in registry
+                    if (!state.clips[v.id]) state.clips[v.id] = v;
+                    // Add ref
+                    if (!state.searchIndex[term][date].includes(v.id)) {
+                      state.searchIndex[term][date].push(v.id);
+                    }
+                  });
+                }
+              }
+
+              // 3. Migrate Collections (videoIds -> clipIds)
+              for (const cid in state.collections) {
+                const col = state.collections[cid];
+                if (col.videoIds) {
+                  col.clipIds = col.videoIds;
+                  delete col.videoIds;
+                }
+              }
+              log("Migration complete.");
+            }
+          }
           log('State loaded:', state);
         }
       } catch (e) {
-        warn('Load failed, using defaults:', e);
+        console.error("State load failed", e);
+        // Reset if corrupt
         state = JSON.parse(JSON.stringify(DEFAULT_STATE));
       }
       render();
@@ -1292,6 +1464,12 @@
     const searchAccountTypeEl = document.getElementById("searchAccountType");
     const maxVideosEl = document.getElementById("maxVideos");
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // COLLAPSE STATE (SESSION ONLY - IN-MEMORY)
+    // ═══════════════════════════════════════════════════════════════════════
+    const collapsedDates = new Set(); // Track collapsed date folders
+    const collapsedTerms = new Set(); // Track collapsed term folders (key: "date|term")
+
     function openPopup() {
       if (popupEl) popupEl.classList.remove("hidden");
       // Sync popup values from settings
@@ -1299,12 +1477,12 @@
       if (searchAccountTypeEl) searchAccountTypeEl.value = state.settings.accountType || "any";
     }
 
-    if (searchBtnEl) searchBtnEl.onclick = openPopup;
-    if (searchInputEl) searchInputEl.addEventListener("keydown", e => { if (e.key === "Enter") openPopup() });
-    if (cancelBtnEl) cancelBtnEl.onclick = () => popupEl.classList.add("hidden");
-
-    if (runBtnEl) runBtnEl.onclick = () => {
+    function closePopup() {
       if (popupEl) popupEl.classList.add("hidden");
+    }
+
+    function runSearch() {
+      closePopup();
       const term = searchInputEl ? searchInputEl.value.trim() : "";
       if (!term) return;
 
@@ -1320,14 +1498,35 @@
       state.clips[today()][term] = gen(term, +(maxVideosEl ? maxVideosEl.value : 5), cfg);
       saveState();
       render();
-    };
+    }
+
+    if (searchBtnEl) searchBtnEl.onclick = openPopup;
+    if (searchInputEl) searchInputEl.addEventListener("keydown", e => { if (e.key === "Enter") openPopup() });
+    if (cancelBtnEl) cancelBtnEl.onclick = closePopup;
+    if (runBtnEl) runBtnEl.onclick = runSearch;
+
+    // Popup keyboard: Enter = search, Escape = close (only when visible)
+    if (popupEl) {
+      popupEl.addEventListener("keydown", e => {
+        // Only handle if popup is visible
+        if (popupEl.classList.contains("hidden")) return;
+
+        if (e.key === "Enter") {
+          e.preventDefault();
+          runSearch();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          closePopup();
+        }
+      });
+    }
 
     // ═══════════════════════════════════════════════════════════════════════
     // REAL DATA SOURCE (READ-ONLY CURATED LIST)
     // ═══════════════════════════════════════════════════════════════════════
     const REAL_CLIPS = [
       { id: "jfKfPfyJRdk", title: "lofi hip hop radio - beats to relax/study to", channel: "Lofi Girl", platform: "YouTube" },
-      { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give You Up", channel: "Rick Astley", platform: "YouTube" },
+      { id: "dQw4w9WgXcQ", title: "Rick Astley - Never Gonna Give Up", channel: "Rick Astley", platform: "YouTube" },
       { id: "jNQXAC9IVRw", title: "Me at the zoo", channel: "jawed", platform: "YouTube" },
       { id: "M7fi_ChqrQA", title: "History of the World, I Guess", channel: "bill wurtz", platform: "YouTube" },
       { id: "L_LUpnjgPso", title: "Cyberpunk 2077 - Official Trailer", channel: "Cyberpunk 2077", platform: "YouTube" },
@@ -1343,44 +1542,108 @@
       { id: "JGwWNGJdvx8", title: "Ed Sheeran - Shape of You", channel: "Ed Sheeran", platform: "YouTube" }
     ];
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // API ABSTRACTION LAYER
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Fetch videos for a search query.
+     * Currently uses curated REAL_CLIPS with term filtering.
+     * Future: Replace with actual YouTube API call via backend.
+     * 
+     * @param {string} query - Search term
+     * @param {number} limit - Max results
+     * @param {object} cfg - Search configuration
+     * @returns {object} { videos: VideoItem[], source: string }
+     */
+    function fetchVideos(query, limit, cfg) {
+      log('fetchVideos called:', { query, limit, cfg });
+
+      const queryLower = query.toLowerCase().trim();
+
+      // Step 1: Filter REAL_CLIPS by search term (fuzzy match on title/channel)
+      const matches = REAL_CLIPS.filter(clip => {
+        const titleMatch = clip.title.toLowerCase().includes(queryLower);
+        const channelMatch = clip.channel.toLowerCase().includes(queryLower);
+        return titleMatch || channelMatch;
+      });
+
+      log('Term filter results:', { query, matchCount: matches.length });
+
+      // Step 2: Determine source and pool
+      let pool = matches;
+      let source = 'curated';
+
+      if (matches.length === 0) {
+        // No matches - fallback to full list
+        pool = REAL_CLIPS;
+        source = 'fallback';
+        warn('No matches for query, using fallback:', query);
+      }
+
+      // Step 3: Sample from pool (random selection up to limit)
+      const shuffled = [...pool].sort(() => Math.random() - 0.5);
+      const selected = shuffled.slice(0, Math.min(limit, shuffled.length));
+
+      log('Final selection:', { source, count: selected.length });
+
+      return { videos: selected, source };
+    }
+
+    /**
+     * Generate video items from fetched data.
+     * Converts raw clip data to full VideoItem objects.
+     */
     function gen(term, n, cfg) {
-      const a = [];
-      const plats = cfg.platforms;
+      log('gen() called:', { term, n, cfg });
+
+      const { videos, source } = fetchVideos(term, n, cfg);
       const backMap = { "24 hours": 864e5, "2 days": 1728e5, "5 days": 432e6, "2 weeks": 12096e5, "4 weeks": 24192e5 };
       const maxTime = backMap[cfg.backDate] || 864e5;
       const now = Date.now();
 
-      for (let i = 0; i < n; i++) {
-        // Pick random real clip
-        const real = REAL_CLIPS[Math.floor(Math.random() * REAL_CLIPS.length)];
-        const p = real.platform;
-
-        // Respect platform filter if possible, else fallback to random from filtered list?
-        // If "YouTube" is checked (which is default), we use it.
-        // If user unchecks YouTube, we might have no real data for Twitch/TikTok yet.
-        // So we fallback to synthetic for non-YouTube requests if needed, OR just force YouTube if selected.
-
+      const results = videos.map((real, i) => {
         const timeOffset = Math.random() * maxTime;
-
-        // Build URL
         const uId = real.id;
-        const url = `https://www.youtube.com/watch?v=${uId}`;
-        const thumb = `https://img.youtube.com/vi/${uId}/mqdefault.jpg`;
 
-        a.push({
+        const videoObj = {
           id: uId,
-          platform: p,
+          platform: real.platform,
           title: real.title,
           channel: real.channel,
           uploadDate: new Date(now - timeOffset),
-          thumbnail: thumb,
+          thumbnail: `https://img.youtube.com/vi/${uId}/mqdefault.jpg`,
           locked: false,
-          url: url,
-          accountType: "Official", // Real clips are mostly official
-          searchType: cfg.searchType
-        });
-      }
-      return a.sort((x, y) => x.uploadDate - y.uploadDate);
+          deleted: false,
+          url: `https://www.youtube.com/watch?v=${uId}`,
+          accountType: "Official",
+          searchType: cfg.searchType,
+          searchSource: source
+        };
+
+        // 1. Save to Registry (Immutable Source)
+        state.clips[uId] = videoObj;
+        return videoObj;
+      });
+
+      // 2. Add ID References to Search Index
+      const bucketDate = cfg.backDate; // e.g., "24 hours"
+      if (!state.searchIndex[term]) state.searchIndex[term] = {};
+
+      // We need to merge if key exists to allow accumulation or just set
+      // The old behavior accumulated. 
+      if (!state.searchIndex[term][bucketDate]) state.searchIndex[term][bucketDate] = [];
+
+      const newIds = results.map(v => v.id);
+      // Append unique
+      newIds.forEach(id => {
+        if (!state.searchIndex[term][bucketDate].includes(id)) {
+          state.searchIndex[term][bucketDate].push(id);
+        }
+      });
+
+      log('gen() results:', { term, count: results.length, source });
+      return results.sort((x, y) => x.uploadDate - y.uploadDate);
     }
 
     /* play */
@@ -1428,7 +1691,8 @@
         }
       }
       if (playTitleEl) playTitleEl.textContent = v.title;
-      if (playMetaEl) playMetaEl.textContent = `${v.platform} • ${v.channel} • ${v.uploadDate.toDateString()}`;
+      const playDateObj = v.uploadDate instanceof Date ? v.uploadDate : new Date(v.uploadDate);
+      if (playMetaEl) playMetaEl.textContent = `${v.platform} • ${v.channel} • ${playDateObj.toDateString()}`;
       if (playModalEl) playModalEl.classList.remove("hidden");
     }
 
@@ -1473,10 +1737,374 @@
     /* render */
     const resultsEl = document.getElementById("results");
 
+    // Find video in REGISTRY
+    function findVideoById(videoId) {
+      return state.clips[videoId] || null;
+    }
+
+    function isVideoRef(videoId) {
+      // Check search index
+      for (const t in state.searchIndex) {
+        for (const d in state.searchIndex[t]) {
+          if (state.searchIndex[t][d].includes(videoId)) return true;
+        }
+      }
+      // Check collections
+      for (const cid in state.collections) {
+        if (state.collections[cid].clipIds.includes(videoId)) return true;
+      }
+      return false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DELETE & REFERENCE MANAGEMENT (V2 Contracts)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Toast Feedback (UX Polish)
+    function showToast(msg) {
+      const t = document.createElement("div");
+      t.textContent = msg;
+      t.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border);padding:8px 16px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.5);color:#fff;font-size:0.9rem;z-index:9999;opacity:0;transition:opacity 0.2s;";
+      document.body.appendChild(t);
+      // Animate in
+      requestAnimationFrame(() => t.style.opacity = "1");
+      // Remove
+      setTimeout(() => {
+        t.style.opacity = "0";
+        setTimeout(() => t.remove(), 200);
+      }, 2000);
+    }
+
+    // Helper: Remove video from all collections
+    function removeVideoFromCollections(videoId) {
+      for (const cid in state.collections) {
+        state.collections[cid].clipIds = state.collections[cid].clipIds.filter(id => id !== videoId);
+      }
+    }
+
+    // 1. Remove from Search (Index Only)
+    function removeFromSearch(videoId, term, date) {
+      const v = findVideoById(videoId);
+      if (!v) return;
+      // Locked check allowed for REMOVING REFERENCE? Prompt: "allows Remove from Search" if locked.
+      // So no lock check here.
+
+      if (state.searchIndex[term] && state.searchIndex[term][date]) {
+        state.searchIndex[term][date] = state.searchIndex[term][date].filter(id => id !== videoId);
+        // Cleanup empty
+        if (state.searchIndex[term][date].length === 0) delete state.searchIndex[term][date];
+        if (Object.keys(state.searchIndex[term]).length === 0) delete state.searchIndex[term];
+      }
+      saveState();
+      render();
+      showToast("Removed from search results");
+    }
+
+    // 2. Remove from Collection (Collection Only)
+    function removeFromCollection(videoId, collectionId) {
+      const v = findVideoById(videoId);
+      if (!v) return;
+      // Prompt: "allows Remove from Collection" even if locked.
+
+      if (state.collections[collectionId]) {
+        state.collections[collectionId].clipIds = state.collections[collectionId].clipIds.filter(id => id !== videoId);
+      }
+      saveState();
+      render();
+      showToast("Removed from collection");
+    }
+
+    // 3. Delete Everywhere (Global + Cascading)
+    function deleteEverywhere(videoId) {
+      const v = findVideoById(videoId);
+      if (!v) return;
+
+      // Lock Check (STRICT)
+      if (v.locked) {
+        alert("Cannot delete locked video globally.");
+        return;
+      }
+
+      if (!confirm("Delete this video everywhere? This cannot be undone.")) return;
+
+      // 1. Remove from Registry
+      v.deleted = true; // Soft delete first? Prompt says "state.clips... deleted: false".
+      // But prompt also says "Deletes clip from: state.clips". 
+      // If I remove from state.clips, it's gone.
+      // But verifying that render loops filter (!v.deleted) implies SOFT delete support.
+      // BUT prompt says "Deletes clip from state.clips".
+      // Let's actually delete it to match "Reference-Safe Deletion" cleanup goals.
+      // BUT safeguard is to mark deleted.
+      // Given "Deletes clip from: state.clips" under "deleteEverywhere", I will delete the key.
+      delete state.clips[videoId];
+
+      // 2. Cleaning references (Optional if render checks existence, but good for hygiene)
+      removeVideoFromCollections(videoId);
+
+      // Clean Search Index
+      for (const t in state.searchIndex) {
+        for (const d in state.searchIndex[t]) {
+          state.searchIndex[t][d] = state.searchIndex[t][d].filter(id => id !== videoId);
+          if (state.searchIndex[t][d].length === 0) delete state.searchIndex[t][d];
+        }
+        if (Object.keys(state.searchIndex[t]).length === 0) delete state.searchIndex[t];
+      }
+
+      saveState();
+      render();
+      showToast("Deleted everywhere");
+    }
+
+    // Helper: Add video to collection dropdown
+    function showCollectionPicker(videoId, anchorEl) {
+      // Remove existing picker if any
+      const existing = document.querySelector(".collection-picker");
+      if (existing) existing.remove();
+
+      const picker = document.createElement("div");
+      picker.className = "collection-picker";
+      picker.style.cssText = "position:absolute;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px;z-index:100;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,0.4);";
+
+      const collectionIds = Object.keys(state.collections);
+      if (collectionIds.length === 0) {
+        const msg = document.createElement("div");
+        msg.style.cssText = "color:var(--text-muted);font-size:0.8rem;padding:4px;";
+        msg.textContent = "No collections. Create one first.";
+        picker.appendChild(msg);
+      } else {
+        collectionIds.forEach(cid => {
+          const col = state.collections[cid];
+          const alreadyIn = col.clipIds.includes(videoId);
+          const item = document.createElement("div");
+          item.style.cssText = "padding:6px 10px;cursor:pointer;border-radius:4px;font-size:0.85rem;";
+          item.textContent = alreadyIn ? `✓ ${col.name}` : col.name;
+          item.onmouseenter = () => item.style.background = "var(--bg-surface)";
+          item.onmouseleave = () => item.style.background = "transparent";
+          item.onclick = (e) => {
+            e.stopPropagation();
+            if (alreadyIn) {
+              // Remove logic could be here, but usually users want to ADD.
+              // Prompt: "allows Remove from Collection". 
+              // Toggle behavior? Or just Add?
+              // Let's implement Toggle for UX polish.
+              removeFromCollection(videoId, cid);
+            } else {
+              col.clipIds.push(videoId);
+              showToast(`Added to "${col.name}"`);
+              saveState();
+              render();
+            }
+            picker.remove();
+          };
+          picker.appendChild(item);
+        });
+      }
+
+      // Position logic
+      const rect = anchorEl.getBoundingClientRect();
+      const parentRect = resultsEl.getBoundingClientRect();
+      // Approximate position relative to viewport or results?
+      // Simple offset:
+      picker.style.top = (window.scrollY + rect.bottom + 5) + "px";
+      picker.style.left = (window.scrollX + rect.left - 100) + "px";
+
+      document.body.appendChild(picker);
+
+      // Close on outside click
+      const close = (e) => {
+        if (!picker.contains(e.target) && e.target !== anchorEl) {
+          picker.remove();
+          document.removeEventListener("click", close);
+        }
+      };
+      setTimeout(() => document.addEventListener("click", close), 0);
+    }
+    // Reusable video card renderer
+    function renderVideoCard(v, collectionId = null) {
+      const V = document.createElement("div");
+      V.className = "video" + (v.locked ? " locked" : "");
+
+      const dateObj = v.uploadDate instanceof Date ? v.uploadDate : new Date(v.uploadDate);
+      const dateLabel = dateObj.toDateString();
+
+      V.innerHTML = `
+        <div class="thumb" style="cursor:pointer"><img src="${v.thumbnail}"></div>
+        <div class="v-info" style="cursor:pointer;flex:1;">
+          <div class="v-title">${v.title}</div>
+          <div class="v-meta">${v.platform} • ${v.channel} • ${dateLabel}</div>
+        </div>
+        <div class="v-btns" style="display:flex;gap:6px;align-items:center;">
+          <button class="addbtn btn-icon" title="Add to Collection" style="padding:4px 8px;font-size:0.8rem;">📁</button>
+          <button class="lockbtn ${v.locked ? "on" : ""}" title="${v.locked ? "Unlock this clip" : "Lock this clip"}">${v.locked ? "Unlock" : "Lock"}</button>
+          <button class="del" title="${collectionId ? "Remove from this collection" : "Remove from search"}">${collectionId ? "Remove" : "Remove"}</button>
+          <button class="del-global" title="Delete everywhere (Danger!)" style="color:var(--danger);font-weight:bold;">×</button>
+        </div>`;
+
+      V.querySelector(".thumb").onclick = () => openPlay(v);
+      V.querySelector(".v-info").onclick = () => openPlay(v);
+      V.querySelector(".addbtn").onclick = (e) => {
+        e.stopPropagation();
+        showCollectionPicker(v.id, e.target);
+      };
+      V.querySelector(".lockbtn").onclick = () => {
+        v.locked = !v.locked;
+        if (state.videos && state.videos[v.id]) state.videos[v.id].locked = v.locked;
+        // Sync Registry if not using state.videos alias? 
+        // Default logic uses state.clips[id].
+        if (state.clips[v.id]) state.clips[v.id].locked = v.locked;
+        saveState();
+        render();
+      };
+
+      // Context remove
+      V.querySelector(".del").onclick = () => {
+        if (collectionId) {
+          removeFromCollection(v.id, collectionId);
+        } else {
+          // Fallback or explicit warning
+          showToast("Use list view to remove from search");
+        }
+      };
+
+      // Global delete
+      V.querySelector(".del-global").onclick = () => {
+        deleteEverywhere(v.id);
+      };
+
+      return V;
+    }
     function render() {
       if (!resultsEl) return;
       resultsEl.innerHTML = "";
-      for (const d in state.clips) {
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // COLLECTIONS SECTION
+      // ═══════════════════════════════════════════════════════════════════════
+      const collectionSection = document.createElement("div");
+      collectionSection.className = "collections-section";
+      collectionSection.style.marginBottom = "24px";
+
+      // Create collection button
+      const createBtn = document.createElement("button");
+      createBtn.className = "btn-icon";
+      createBtn.style.cssText = "margin-bottom:12px;padding:10px 16px;";
+      createBtn.textContent = "+ New Collection";
+      createBtn.onclick = () => {
+        const name = prompt("Collection name:");
+        if (name && name.trim()) {
+          const id = crypto.randomUUID();
+          state.collections[id] = { name: name.trim(), clipIds: [] };
+          saveState();
+          render();
+        }
+      };
+      collectionSection.appendChild(createBtn);
+
+      // Render each collection
+      for (const cid in state.collections) {
+        const col = state.collections[cid];
+        const colDiv = document.createElement("div");
+        colDiv.className = "collection";
+        colDiv.style.cssText = "background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;";
+
+        const colHeader = document.createElement("div");
+        colHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;cursor:pointer;";
+
+        const colName = document.createElement("span");
+        colName.style.fontWeight = "600";
+        colName.textContent = `📁 ${col.name} (${col.clipIds.length})`;
+        colHeader.appendChild(colName);
+
+        const colDel = document.createElement("button");
+        colDel.className = "btn-icon-danger";
+        colDel.style.cssText = "padding:4px 8px;font-size:0.7rem;";
+        colDel.textContent = "Delete";
+        colDel.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm(`Delete collection "${col.name}"?`)) {
+            delete state.collections[cid];
+            saveState();
+            render();
+          }
+        };
+        colHeader.appendChild(colDel);
+        colDiv.appendChild(colHeader);
+
+        // Collection videos container (collapsed by default)
+        const colVideos = document.createElement("div");
+        colVideos.style.cssText = "margin-top:10px;display:none;";
+
+        colHeader.onclick = (e) => {
+          if (e.target.tagName !== "BUTTON") {
+            colVideos.style.display = colVideos.style.display === "none" ? "block" : "none";
+          }
+        };
+
+        // Find and render videos in this collection
+        col.clipIds.forEach(vid => {
+          const v = findVideoById(vid);
+          if (v) {
+            const vDiv = renderVideoCard(v, cid);
+            colVideos.appendChild(vDiv);
+          }
+        });
+
+        if (col.clipIds.length === 0) {
+          const emptyMsg = document.createElement("div");
+          emptyMsg.style.cssText = "color:var(--text-muted);font-size:0.85rem;padding:8px 0;";
+          emptyMsg.textContent = "No videos yet. Use 📁 on video cards to add.";
+          colVideos.appendChild(emptyMsg);
+        }
+
+        colDiv.appendChild(colVideos);
+        collectionSection.appendChild(colDiv);
+      }
+
+      if (Object.keys(state.collections).length > 0) {
+        // Divider
+        const div = document.createElement("h3");
+        div.textContent = "Your Collections";
+        div.style.cssText = "margin:20px 0 10px 0;font-size:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;";
+        resultsEl.appendChild(div);
+
+        resultsEl.appendChild(collectionSection);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // DATED SEARCH RESULTS (Reconstructed from Index)
+      // ═══════════════════════════════════════════════════════════════════════
+      // Invert Index: Term->Date to Date->Term for display hierarchy
+      const viewData = {};
+      for (const term in state.searchIndex) {
+        for (const dateKey in state.searchIndex[term]) {
+          if (!viewData[dateKey]) viewData[dateKey] = {};
+          // Resolve IDs to Objects
+          const ids = state.searchIndex[term][dateKey];
+          const resolved = ids.map(id => state.clips[id]).filter(v => v && !v.deleted);
+
+          if (resolved.length > 0) {
+            viewData[dateKey][term] = resolved;
+          }
+        }
+      }
+
+      if (Object.keys(viewData).length > 0) {
+        const div = document.createElement("h3");
+        div.textContent = "Search Results";
+        div.style.cssText = "margin:30px 0 10px 0;font-size:1rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;";
+        resultsEl.appendChild(div);
+      } else if (Object.keys(state.collections).length === 0) {
+        // Empty State (No Search + No Collections)
+        resultsEl.innerHTML = `
+           <div style="text-align:center;padding:50px;color:var(--text-muted);">
+             <h2>Ready to build your vault?</h2>
+             <p>Use the search bar above to find clips.</p>
+           </div>
+         `;
+        if (startupEl) startupEl.classList.add("active"); // Or keep simple
+      }
+
+      for (const d in viewData) {
         const D = document.createElement("div");
         D.className = "date";
         const dh = document.createElement("div");
@@ -1495,17 +2123,106 @@
         dh.appendChild(dhDel);
 
         const db = document.createElement("div");
-        dh.onclick = (e) => { if (e.target !== dhDel) db.style.display = db.style.display === "none" ? "block" : "none"; };
 
-        for (const t in state.clips[d]) {
+        // Restore collapsed state for date folder
+        if (collapsedDates.has(d)) {
+          db.style.display = "none";
+        }
+
+        dh.onclick = (e) => {
+          if (e.target !== dhDel) {
+            const isCollapsed = db.style.display === "none";
+            db.style.display = isCollapsed ? "block" : "none";
+            // Track collapse state
+            if (isCollapsed) {
+              collapsedDates.delete(d);
+            } else {
+              collapsedDates.add(d);
+            }
+          }
+        };
+
+        // Sort terms: pinned first
+        const terms = Object.keys(state.clips[d]);
+        terms.sort((a, b) => {
+          const aKey = `${d}|${a}`;
+          const bKey = `${d}|${b}`;
+          const aPinned = state.pinnedTerms.includes(aKey);
+          const bPinned = state.pinnedTerms.includes(bKey);
+          if (aPinned && !bPinned) return -1;
+          if (!aPinned && bPinned) return 1;
+          return 0;
+        });
+
+        for (const t of terms) {
+          const termKey = `${d}|${t}`;
           const T = document.createElement("div");
           T.className = "term";
           const th = document.createElement("div");
           th.className = "term-h";
 
+          // Pin indicator
+          const isPinned = state.pinnedTerms.includes(termKey);
+          if (isPinned) {
+            const pinIcon = document.createElement("span");
+            pinIcon.textContent = "📌 ";
+            pinIcon.style.marginRight = "4px";
+            th.appendChild(pinIcon);
+          }
+
+          // Term title (use renamed if exists)
+          const displayName = state.renamedTerms[termKey] || t;
           const thSpan = document.createElement("span");
-          thSpan.textContent = t;
+          thSpan.textContent = displayName;
+          thSpan.style.cursor = "pointer";
+          thSpan.title = "Double-click to rename";
           th.appendChild(thSpan);
+
+          // Rename on double-click
+          thSpan.ondblclick = (e) => {
+            e.stopPropagation();
+            const input = document.createElement("input");
+            input.type = "text";
+            input.value = displayName;
+            input.style.cssText = "background:#1a1d24;border:1px solid var(--accent);color:#fff;padding:4px 8px;border-radius:6px;font-size:inherit;width:150px;";
+            thSpan.replaceWith(input);
+            input.focus();
+            input.select();
+
+            const save = () => {
+              const newName = input.value.trim();
+              if (newName && newName !== t) {
+                state.renamedTerms[termKey] = newName;
+              } else {
+                delete state.renamedTerms[termKey];
+              }
+              saveState();
+              render();
+            };
+
+            input.onkeydown = (ev) => {
+              if (ev.key === "Enter") { save(); }
+              if (ev.key === "Escape") { render(); }
+            };
+            input.onblur = save;
+          };
+
+          // Pin button
+          const pinBtn = document.createElement("button");
+          pinBtn.className = "btn-icon";
+          pinBtn.style.cssText = "padding:4px 8px;font-size:0.7rem;margin-left:8px;";
+          pinBtn.textContent = isPinned ? "Unpin" : "Pin";
+          pinBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (isPinned) {
+              state.pinnedTerms = state.pinnedTerms.filter(k => k !== termKey);
+            } else {
+              state.pinnedTerms.push(termKey);
+            }
+            saveState();
+            render();
+          };
+          th.appendChild(pinBtn);
 
           const thDel = document.createElement("button");
           thDel.className = "btn-icon-danger";
@@ -1516,37 +2233,70 @@
           th.appendChild(thDel);
 
           const tb = document.createElement("div");
-          th.onclick = (e) => { if (e.target !== thDel) tb.style.display = tb.style.display === "none" ? "block" : "none"; };
 
-          state.clips[d][t].forEach(v => {
+          // Restore collapsed state for term folder
+          if (collapsedTerms.has(termKey)) {
+            tb.style.display = "none";
+          }
+
+          th.onclick = (e) => {
+            if (e.target.tagName !== "BUTTON" && e.target.tagName !== "INPUT") {
+              const isCollapsed = tb.style.display === "none";
+              tb.style.display = isCollapsed ? "block" : "none";
+              // Track collapse state
+              if (isCollapsed) {
+                collapsedTerms.delete(termKey);
+              } else {
+                collapsedTerms.add(termKey);
+              }
+            }
+          };
+
+          viewData[d][t].forEach(v => {
             const V = document.createElement("div");
             V.className = "video" + (v.locked ? " locked" : "");
+
+            // Normalize uploadDate to Date object
+            const dateObj = v.uploadDate instanceof Date ? v.uploadDate : new Date(v.uploadDate);
+            const dateLabel = dateObj.toDateString();
+
             V.innerHTML = `
           <div class="thumb" style="cursor:pointer"><img src="${v.thumbnail}"></div>
           <div class="v-info" style="cursor:pointer">
             <div class="v-title">${v.title}</div>
-            <div class="v-meta">${v.platform} • ${v.channel} • ${v.uploadDate.toDateString()}</div>
+            <div class="v-meta">${v.platform} • ${v.channel} • ${dateLabel}</div>
              <div style="font-size:0.65rem;opacity:0.5;margin-top:2px">${v.accountType || "User"} • ${v.searchType || "All"}</div>
           </div>
-          <div class="v-btns">
-            <button class="lockbtn ${v.locked ? "on" : ""}">${v.locked ? "Unlock" : "Lock"}</button>
-            <button class="del">Delete</button>
+          <div class="v-btns" style="display:flex;gap:6px;align-items:center;">
+            <button class="addbtn btn-icon" title="Add to Collection" style="padding:4px 8px;font-size:0.8rem;">📁</button>
+            <button class="lockbtn ${v.locked ? "on" : ""}" title="${v.locked ? "Unlock this clip" : "Lock this clip"}">${v.locked ? "Unlock" : "Lock"}</button>
+            <button class="del" title="Remove this clip from search results">Remove from Search</button>
+            <button class="del-global" title="Delete everywhere (Danger!)" style="color:var(--danger);font-weight:bold;">×</button>
           </div>`;
 
             // Interaction handlers
             V.querySelector(".thumb").onclick = () => openPlay(v);
             V.querySelector(".v-info").onclick = () => openPlay(v);
+            V.querySelector(".addbtn").onclick = (e) => {
+              e.stopPropagation();
+              showCollectionPicker(v.id, e.target);
+            };
 
-            V.querySelector(".lockbtn").onclick = () => { v.locked = !v.locked; saveState(); render() };
-            V.querySelector(".del").onclick = () => {
-              if (state.settings.protectLocked && v.locked) return; // Protected
-              if (!v.locked || !state.settings.protectLocked) {
-                state.clips[d][t] = state.clips[d][t].filter(x => x !== v);
-                if (state.clips[d][t].length === 0) delete state.clips[d][t];
-                if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
-                saveState();
-                render();
+            V.querySelector(".lockbtn").onclick = () => {
+              v.locked = !v.locked;
+              // Sync to global video store
+              if (state.clips[v.id]) {
+                state.clips[v.id].locked = v.locked;
               }
+              saveState();
+              render();
+            };
+            V.querySelector(".del").onclick = () => {
+              // V2: Remove from Search Index Only
+              removeFromSearch(v.id, t, d);
+            };
+            V.querySelector(".del-global").onclick = () => {
+              deleteEverywhere(v.id);
             };
             tb.appendChild(V);
           });
@@ -1566,43 +2316,73 @@
     // BULK DELETE (SAFE FAILURE)
     // ═══════════════════════════════════════════════════════════════════════
     function deleteDate(d) {
-      if (!state.clips || !state.clips[d]) {
-        warn('deleteDate: date not found', d);
-        return; // Safe failure
-      }
-      if (confirm(`Delete all clips from ${d}?`)) {
-        log('Deleting date:', d);
-        for (const t in state.clips[d]) {
-          if (state.settings.protectLocked) {
-            state.clips[d][t] = state.clips[d][t].filter(v => v.locked);
-          } else {
-            state.clips[d][t] = [];
+      if (confirm(`Remove all search results from ${d}?`)) {
+        log('Deleting date (from index):', d);
+
+        // Scan index for Term/Date buckets
+        for (const t in state.searchIndex) {
+          if (state.searchIndex[t][d]) {
+            if (state.settings.protectLocked) {
+              // Filter out locked
+              state.searchIndex[t][d] = state.searchIndex[t][d].filter(id => {
+                const v = state.clips[id];
+                return v && v.locked;
+              });
+            } else {
+              delete state.searchIndex[t][d];
+            }
+            // Cleanup Term if empty
+            if (state.searchIndex[t] && Object.keys(state.searchIndex[t]).length === 0) {
+              delete state.searchIndex[t];
+            }
           }
-          if (state.clips[d][t].length === 0) delete state.clips[d][t];
         }
-        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
         saveState();
         render();
       }
     }
 
     function deleteTerm(d, t) {
-      if (!state.clips || !state.clips[d] || !state.clips[d][t]) {
-        warn('deleteTerm: term not found', d, t);
-        return; // Safe failure
-      }
-      if (confirm(`Delete all clips for "${t}"?`)) {
-        log('Deleting term:', t, 'from', d);
-        if (state.settings.protectLocked) {
-          state.clips[d][t] = state.clips[d][t].filter(v => v.locked);
-        } else {
-          state.clips[d][t] = [];
+      if (!state.searchIndex[t]) return;
+
+      if (confirm(`Remove all results for "${t}" (${d})?`)) {
+        log('Deleting term bucket:', t, d);
+
+        if (state.searchIndex[t][d]) {
+          if (state.settings.protectLocked) {
+            state.searchIndex[t][d] = state.searchIndex[t][d].filter(id => {
+              const v = state.clips[id];
+              return v && v.locked;
+            });
+          } else {
+            delete state.searchIndex[t][d];
+          }
+          if (Object.keys(state.searchIndex[t]).length === 0) {
+            delete state.searchIndex[t];
+          }
         }
-        if (state.clips[d][t].length === 0) delete state.clips[d][t];
-        if (Object.keys(state.clips[d]).length === 0) delete state.clips[d];
         saveState();
         render();
       }
+    }
+
+    function runSearch() {
+      const term = searchInputEl.value.trim();
+      if (!term) return;
+
+      const n = +maxVideosEl.value;
+      const cfg = {
+        backDate: backDateEl.value,
+        searchType: searchByEl.value,
+        accountType: searchAccountTypeEl.value
+      };
+
+      // V2 Gen: Updates state.clips and state.searchIndex internally
+      gen(term, n, cfg);
+
+      saveState();
+      render();
+      closePopup();
     }
 
     // Init at the END
